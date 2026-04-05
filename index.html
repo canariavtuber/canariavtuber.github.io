@@ -1,15 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Cana VTuber</title>
+
+    <!-- Preconnect to external origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="http://canavtuber.com/img/favicon.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png" />
+
+    <!-- Preload background images -->
+    <link rel="preload" as="image" href="img/reel/1000008582.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="img/reel/CanaKittyBackgroundWallpaper.png" />
+    <link rel="preload" as="image" href="img/reel/Canaria_1.png" />
+    <link rel="preload" as="image" href="img/reel/skeb_by_qum.png" />
+    <link rel="preload" as="image" href="img/signature3.png" />
+
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Cana VTuber" />
-    <meta property="og:description" content="Cana is a silly succky succubus ♡. You can find her on Twitch and other platforms!" />
+    <meta property="og:description"
+        content="Cana is a silly succky succubus ♡. You can find her on Twitch and other platforms!" />
     <meta property="og:url" content="https://www.canavtuber.com/" />
     <meta property="og:site_name" content="Cana VTuber" />
     <meta property="og:updated_time" content="2025-06-07T22:00:00+01:00" />
@@ -20,8 +42,6 @@
     <meta property="og:image:alt" content="cana vtuber" />
     <meta property="og:image:type" content="image/png" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-
         * {
             margin: 0;
             padding: 0;
@@ -32,105 +52,73 @@
             --primary: beige;
             --secondary: #9B4DE0;
             --background: #0a0a0a;
-            --card-bg: rgba(255, 255, 255, 0.05);
         }
 
-        /* Ensure the page has a proper background before images load */
+        html,
         body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
             background-color: var(--background);
             color: #fff;
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
         }
 
+        /* ── Background ── */
         .background-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            z-index: 1;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 0;
             background-color: var(--background);
         }
 
-
         .background-image-wrapper {
             position: absolute;
-            width: 130%;
-            height: 130%;
-            top: -15%;
-            left: -15%;
-            transform-style: preserve-3d;
-            transform: scale(1.1); /* Initial scale */
-            transition: transform 0.3s ease-out;
+            inset: 0;
         }
 
-        @keyframes loading {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
+        /* Images sit at z-index 1, overlay at z-index 2 */
         .background-image {
             position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             opacity: 0;
             transition: opacity 1s ease-in-out;
-            will-change: opacity;
+        }
+
+        .background-image.active {
+            opacity: 1;
         }
 
         .background-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                    135deg,
-                    rgba(10, 10, 10, 0.7) 0%,
-                    rgba(10, 10, 10, 0.6) 100%
-            );
-            backdrop-filter: blur(4px);
+            inset: 0;
+            background: rgba(10, 10, 10, 0.55);
             z-index: 2;
+            pointer-events: none;
         }
 
-
-        .background-image.active {
-            opacity: 0.6;
-        }
-
-        @keyframes kenBurns {
-            0% {
-                transform: scale(1.2) translate(0, 0);
-            }
-            50% {
-                transform: scale(1.3) translate(-1%, -1%);
-            }
-            100% {
-                transform: scale(1.2) translate(0, 0);
-            }
-        }
-
-
+        /* ── Layout ── */
         .container {
+            position: relative;
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            min-height: 98vh;
-            box-sizing: border-box;
+            min-height: 100vh;
             padding: 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            z-index: 2;
+            z-index: 1;
         }
 
         .content-wrapper {
@@ -143,19 +131,23 @@
             gap: 1rem;
         }
 
+        /* ── Links grid ── */
         .links-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
-            margin: 0 auto;
             width: 100%;
-            z-index: 5;
         }
 
         .links-section {
             display: flex;
             flex-direction: column;
             gap: 0.8rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .section-title {
@@ -163,11 +155,20 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-bottom: 1rem;
         }
 
-        .social-link {
-            padding: 0.8rem 1.2rem;
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), transparent);
         }
 
         @media (max-width: 768px) {
@@ -181,7 +182,7 @@
             }
         }
 
-        /* Add these new styles for modern link effects */
+        /* ── Social links ── */
         .social-link {
             position: relative;
             padding: 0.8rem 1.2rem;
@@ -198,6 +199,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(5px);
             text-align: left;
+            animation: fadeInUp 0.6s ease backwards;
         }
 
         .social-link i {
@@ -222,15 +224,8 @@
         .social-link::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                    45deg,
-                    rgba(255, 255, 255, 0.1),
-                    rgba(255, 255, 255, 0.05)
-            );
+            inset: 0;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
             transform: translateX(-100%);
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -238,68 +233,26 @@
         .social-link:hover {
             transform: translateY(-2px);
             border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2),
-            0 0 30px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
         .social-link:hover::before {
             transform: translateX(0);
         }
 
-        .social-link span {
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            z-index: 1;
-        }
-
-        /* Section title enhancement */
-        .section-title {
-            position: relative;
-            display: inline-block;
-            padding-bottom: 5px;
-            margin-bottom: 1rem;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(
-                    90deg,
-                    var(--primary),
-                    var(--secondary),
-                    transparent
-            );
-        }
-
-        /* Links section enhancement */
-        .links-section {
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Animation for links on page load */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        .social-link {
-            animation: fadeInUp 0.6s ease backwards;
-        }
-
+        /* ── Signature ── */
         .signature-img {
             max-width: 500px;
             width: 100%;
@@ -310,56 +263,12 @@
             z-index: 3;
         }
 
-        .content-wrapper {
-            gap: 1rem;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100vh;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-        }
-
-        .background-container {
-            position: fixed; /* Keep background fixed */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-            z-index: -1; /* Ensure background stays behind content */
-        }
-
-        .background-image-wrapper {
-            position: absolute;
-            width: 130%;
-            height: 130%;
-            top: -15%;
-            left: -15%;
-            transform-style: preserve-3d;
-            transform: scale(1.1);
-            transition: transform 0.3s ease-out;
-            overflow: hidden;
-        }
-
-        .container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh; /* Change height to min-height */
-        }
-
-        main {
-            position: relative;
-            z-index: 1; /* Ensure content stays above background */
-        }
-
+        /* ── Butterflies ── */
         .butterfly {
             position: fixed;
-            width: 45px; /* Swapped width and height */
+            width: 45px;
             height: 30px;
-            z-index: 1;
+            z-index: 10;
             pointer-events: none;
             animation: floatPath 40s linear;
         }
@@ -369,16 +278,17 @@
             height: 100%;
             transform-origin: center;
             animation: flapWings 0.9s ease-in-out infinite;
-            transform: rotate(-90deg); /* Rotate the SVG counter-clockwise */
         }
 
         @keyframes flapWings {
             0% {
                 transform: rotate(-90deg) scaleY(1);
             }
+
             50% {
                 transform: rotate(-90deg) scaleY(0.5);
             }
+
             100% {
                 transform: rotate(-90deg) scaleY(1);
             }
@@ -388,310 +298,186 @@
             0% {
                 transform: translate(-50px, 0) rotate(0deg) scale(1);
             }
+
             25% {
                 transform: translate(calc(25vw), 10vh) rotate(-5deg) scale(0.9);
             }
+
             50% {
                 transform: translate(calc(50vw), -5vh) rotate(8deg) scale(1.1);
             }
+
             75% {
                 transform: translate(calc(75vw), 15vh) rotate(-10deg) scale(0.95);
             }
+
             100% {
                 transform: translate(calc(100vw + 50px), 5vh) rotate(5deg) scale(1);
             }
         }
     </style>
-
 </head>
+
 <body>
-<div class="background-container">
-    <div class="background-image-wrapper">
+
+    <div class="background-container">
+        <div class="background-image-wrapper">
+            <!-- background images injected here by JS -->
+        </div>
         <div class="background-overlay"></div>
-        <!-- Images will be inserted here dynamically -->
     </div>
-</div>
 
-<div class="container">
-    <div class="content-wrapper">
-        <div class="signature-container">
-            <div class="signature-placeholder"></div>
-            <img alt="Canaria Signature" class="signature-img" height="200"
-                 loading="lazy" src="img/signature3.png" width="500">
-        </div>
-
-        <div class="links-grid">
-            <!-- Main Social Links -->
-            <div class="links-section">
-                <div class="section-title">Social Media</div>
-                <a class="social-link" href="https://www.twitch.tv/cana" target="_blank">
-                    <i class="fab fa-twitch"></i>
-                    <span>Twitch</span>
-                </a>
-                <a class="social-link" href="https://www.youtube.com/channel/UCjKEFFneLxzvafj7vvLKlRQ" target="_blank">
-                    <i class="fab fa-youtube"></i>
-                    <span>YouTube</span>
-                </a>
-                <a class="social-link" href="https://twitter.com/CanariaVTuber" target="_blank">
-                    <i class="fab fa-twitter"></i>
-                    <span>Twitter</span>
-                </a>
-                <a class="social-link" href="https://www.tiktok.com/@canariavtuber" target="_blank">
-                    <i class="fab fa-tiktok"></i>
-                    <span>TikTok</span>
-                </a>
-                <a class="social-link" href="https://bsky.app/profile/cana.bsky.social" target="_blank">
-                    <i class="fab fa-bluesky"></i>
-                    <span>BlueSky</span>
-                </a>
-                <a class="social-link" href="https://www.instagram.com/canariavtuber/" target="_blank">
-                    <i class="fab fa-instagram"></i>
-                    <span>Instagram</span>
-                </a>
-                <a class="social-link" href="https://www.facebook.com/people/Cana-Does-VTuber-Stuff/61583788246704/" target="_blank">
-                    <i class="fab fa-facebook"></i>
-                    <span>Facebook</span>
-                </a>
-                <div class="section-title" style="">18+ Content</div>
-                <a class="social-link" href="https://www.patreon.com/CanariaVTuber" target="_blank">
-                    <i class="fab fa-patreon"></i>
-                    <span>Patreon 18+</span>
-                </a>
-                <a class="social-link" href="https://twitter.com/Susnaria" target="_blank">
-                    <i class="fab fa-twitter"></i>
-                    <span>NSFW Twitter 18+</span>
-                </a>
-                <a class="social-link" href="https://fansly.com/CanariaVTuber/posts" target="_blank">
-                    <i class="fa fa-heart"></i>
-                    <span>Fansly</span>
-                </a>
+    <div class="container">
+        <div class="content-wrapper">
+            <div class="signature-container">
+                <img alt="Canaria Signature" class="signature-img" height="200" src="img/signature3.png" width="500">
             </div>
 
-            <!-- Support Links -->
-            <div class="links-section">
-                <div class="section-title">Support</div>
-                <a class="social-link" href="https://throne.com/canariavtuber" target="_blank">
-                    <i class="fas fa-crown"></i>
-                    <span>Throne</span>
-                </a>
-                <a class="social-link" href="https://streamelements.com/cana/tip" target="_blank">
-                    <i class="fas fa-gift"></i>
-                    <span>StreamElements Tip</span>
-                </a>
-                <div class="section-title">Shop</div>
-                <a class="social-link" href="https://ara-culture.com/collections/cana" target="_blank">
-                    <i class="fa fa-shopping-bag"></i>
-                    <span>AraCulture</span>
-                </a>
-                <a class="social-link" href="https://uwumarket.us/collections/cana" target="_blank">
-                    <i class="fa fa-shopping-bag"></i>
-                    <span>UwU Market</span>
-                </a>
-                <a class="social-link" href="https://mugimart.co/collections/cana" target="_blank">
-                    <i class="fa fa-shopping-bag"></i>
-                    <span>Mugimart</span>
-                </a>
-                <a class="social-link" href="https://gamersupps.gg/?ref=CANA" target="_blank">
-                    <i class="fa fa-coffee"></i>
-                    <span>GamerSupps</span>
-                </a>
-                <div class="section-title">Community</div>
-                <a class="social-link" href="https://discord.gg/SjA94Nrq2P" target="_blank">
-                    <i class="fab fa-discord"></i>
-                    <span>Discord</span>
-                </a>
+            <div class="links-grid">
+                <div class="links-section">
+                    <div class="section-title">Social Media</div>
+                    <a class="social-link" href="https://www.twitch.tv/cana" target="_blank">
+                        <i class="fab fa-twitch"></i><span>Twitch</span>
+                    </a>
+                    <a class="social-link" href="https://www.youtube.com/channel/UCjKEFFneLxzvafj7vvLKlRQ"
+                        target="_blank">
+                        <i class="fab fa-youtube"></i><span>YouTube</span>
+                    </a>
+                    <a class="social-link" href="https://twitter.com/CanariaVTuber" target="_blank">
+                        <i class="fab fa-twitter"></i><span>Twitter</span>
+                    </a>
+                    <a class="social-link" href="https://www.tiktok.com/@canariavtuber" target="_blank">
+                        <i class="fab fa-tiktok"></i><span>TikTok</span>
+                    </a>
+                    <a class="social-link" href="https://bsky.app/profile/cana.bsky.social" target="_blank">
+                        <i class="fab fa-bluesky"></i><span>BlueSky</span>
+                    </a>
+                    <a class="social-link" href="https://www.instagram.com/canariavtuber/" target="_blank">
+                        <i class="fab fa-instagram"></i><span>Instagram</span>
+                    </a>
+                    <a class="social-link" href="https://www.facebook.com/people/Cana-Does-VTuber-Stuff/61583788246704/"
+                        target="_blank">
+                        <i class="fab fa-facebook"></i><span>Facebook</span>
+                    </a>
+                    <div class="section-title">18+ Content</div>
+                    <a class="social-link" href="https://www.patreon.com/CanariaVTuber" target="_blank">
+                        <i class="fab fa-patreon"></i><span>Patreon 18+</span>
+                    </a>
+                    <a class="social-link" href="https://twitter.com/Susnaria" target="_blank">
+                        <i class="fab fa-twitter"></i><span>NSFW Twitter 18+</span>
+                    </a>
+                    <a class="social-link" href="https://fansly.com/CanariaVTuber/posts" target="_blank">
+                        <i class="fa fa-heart"></i><span>Fansly</span>
+                    </a>
+                </div>
+
+                <div class="links-section">
+                    <div class="section-title">Support</div>
+                    <a class="social-link" href="https://throne.com/canariavtuber" target="_blank">
+                        <i class="fas fa-crown"></i><span>Throne</span>
+                    </a>
+                    <a class="social-link" href="https://streamelements.com/cana/tip" target="_blank">
+                        <i class="fas fa-gift"></i><span>StreamElements Tip</span>
+                    </a>
+                    <div class="section-title">Shop</div>
+                    <a class="social-link" href="https://ara-culture.com/collections/cana" target="_blank">
+                        <i class="fa fa-shopping-bag"></i><span>AraCulture</span>
+                    </a>
+                    <a class="social-link" href="https://uwumarket.us/collections/cana" target="_blank">
+                        <i class="fa fa-shopping-bag"></i><span>UwU Market</span>
+                    </a>
+                    <a class="social-link" href="https://mugimart.co/collections/cana" target="_blank">
+                        <i class="fa fa-shopping-bag"></i><span>Mugimart</span>
+                    </a>
+                    <a class="social-link" href="https://gamersupps.gg/?ref=CANA" target="_blank">
+                        <i class="fa fa-coffee"></i><span>GamerSupps</span>
+                    </a>
+                    <div class="section-title">Community</div>
+                    <a class="social-link" href="https://discord.gg/SjA94Nrq2P" target="_blank">
+                        <i class="fab fa-discord"></i><span>Discord</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Utility functions
-    const $ = selector => document.querySelector(selector);
-    const $$ = selector => document.querySelectorAll(selector);
-    const random = (min, max) => min + Math.random() * (max - min);
+    <script>
+        const random = (min, max) => min + Math.random() * (max - min);
 
-    // Pure function to create element with attributes
-    const createElement = (tag, attributes = {}) => {
-        const element = document.createElement(tag);
-        Object.entries(attributes).forEach(([key, value]) => {
-            element[key] = value;
-        });
-        return element;
-    };
+        const createElement = (tag, attrs = {}) => {
+            const el = document.createElement(tag);
+            Object.entries(attrs).forEach(([k, v]) => { el[k] = v; });
+            return el;
+        };
 
-    // Background handling
-    const createParallaxEffect = (background, translateAmount) => {
-        const calculateTransform = (mouseX, mouseY) => `
-        scale(1.1)
-        rotateY(${mouseX}deg)
-        rotateX(${-mouseY}deg)
-        translate3d(${mouseX * translateAmount / 4}px, ${mouseY * translateAmount / 4}px, 0)
-    `;
+        // ── Background slideshow ──────────────────────────────────────────────────
+        const initializeBackgroundImages = () => {
+            const urls = [
+                'img/reel/1000008582.jpg',
+                'img/reel/CanaKittyBackgroundWallpaper.png',
+                'img/reel/Canaria_1.png',
+                'img/reel/skeb_by_qum.png'
+            ];
 
-        const updateBackground = (e) => {
-            const mouseX = e.clientX / window.innerWidth - 0.5;
-            const mouseY = e.clientY / window.innerHeight - 0.5;
+            const wrapper = document.querySelector('.background-image-wrapper');
+            let currentIndex = 0;
 
-            requestAnimationFrame(() => {
-                background.style.transform = calculateTransform(mouseX, mouseY);
+            // Build <img> elements immediately so the browser can start loading them
+            const imgs = urls.map(url => {
+                const img = document.createElement('img');
+                img.className = 'background-image';
+                img.alt = '';
+                img.src = url;
+                wrapper.appendChild(img);
+                return img;
             });
-        };
 
-        const resetBackground = () => {
-            background.style.transform = calculateTransform(0, 0);
-        };
+            // Show a specific slide
+            const show = (index) => {
+                imgs.forEach((img, i) => img.classList.toggle('active', i === index));
+            };
 
-        return {
-            attach: () => {
-                document.addEventListener('mousemove', updateBackground);
-                document.addEventListener('mouseleave', resetBackground);
-            },
-            detach: () => {
-                document.removeEventListener('mousemove', updateBackground);
-                document.removeEventListener('mouseleave', resetBackground);
+            // Show first image as soon as it has loaded (or immediately if cached)
+            if (imgs[0].complete) {
+                show(0);
+            } else {
+                imgs[0].addEventListener('load', () => show(0), { once: true });
             }
-        };
-    };
 
-    // Slideshow functionality
-    const createSlideshow = (images, delay = 8000) => {
-        let currentIndex = 0;
-
-        const nextImage = () => {
-            images[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + 1) % images.length;
-            images[currentIndex].classList.add('active');
+            // Rotate every 8 s
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % imgs.length;
+                show(currentIndex);
+            }, 8000);
         };
 
-        const preloadImages = () => {
-            images.forEach((img, index) => {
-                const preloadImage = new Image();
-                preloadImage.src = img.src;
-                img.style.animationDelay = `${-index * (delay / images.length)}ms`;
-            });
-        };
-
-        return {
-            start: () => {
-                preloadImages();
-                return setInterval(nextImage, delay);
-            },
-            stop: (intervalId) => clearInterval(intervalId)
-        };
-    };
-
-    // Butterfly creation and animation
-    const butterflyConfig = {
-        colors: ['#FF69B4', '#9B4DE0', '#4DC0E0', '#FFB6C1', '#E6E6FA'],
-        createInterval: 4000,
-        initialCount: 3
-    };
-
-    const createButterfly = () => {
-        const createButterflyElement = () => {
-            const butterfly = createElement('div', {className: 'butterfly'});
-            const img = createElement('img', {src: 'img/butterfly-static.svg'});
-
+        // ── Butterflies ───────────────────────────────────────────────────────────
+        const createButterfly = () => {
+            const butterfly = createElement('div', { className: 'butterfly' });
+            const img = createElement('img', { src: 'img/butterfly-static.svg', alt: '' });
             const size = random(15, 30);
-            const styles = {
+            Object.assign(butterfly.style, {
                 top: `${random(0, window.innerHeight * 0.8)}px`,
                 width: `${size}px`,
                 height: `${size * 1.5}px`,
                 animationDuration: `${random(35, 60)}s`
-            };
-
-            Object.assign(butterfly.style, styles);
+            });
             img.style.filter = `hue-rotate(${random(0, 360)}deg)`;
-
             butterfly.appendChild(img);
-            return butterfly;
+            document.body.appendChild(butterfly);
+            butterfly.addEventListener('animationend', () => butterfly.remove(), { once: true });
         };
 
-        const butterfly = createButterflyElement();
-        document.body.appendChild(butterfly);
-
-        butterfly.addEventListener('animationend', () => butterfly.remove());
-        return butterfly;
-    };
-
-    const initializeButterflySystem = ({initialCount, createInterval}) => {
-        // Create initial butterflies
-        const createInitialButterflies = () => {
-            Array.from({length: initialCount}).forEach((_, i) => {
-                setTimeout(createButterfly, i * 2000);
-            });
+        const initializeButterflySystem = () => {
+            // Stagger the first three
+            for (let i = 0; i < 3; i++) setTimeout(createButterfly, i * 2000);
+            // Keep spawning randomly
+            setInterval(() => { if (Math.random() > 0.5) createButterfly(); }, 4000);
         };
 
-        // Start continuous butterfly creation
-        const startButterflyCreation = () => {
-            return setInterval(() => {
-                if (Math.random() > 0.5) {
-                    createButterfly();
-                }
-            }, createInterval);
-        };
-
-        return {
-            start: () => {
-                createInitialButterflies();
-                return startButterflyCreation();
-            },
-            stop: (intervalId) => clearInterval(intervalId)
-        };
-    };
-
-    const createHeartTrailSystem = () => {
-        const hearts = ['❤️', '💖', '💗', '💓', '💝'];
-        let lastX = 0;
-        let lastY = 0;
-        let lastHeartTime = 0;
-        const minTimeBetweenHearts = 50; // Reduced delay for smoother animation
-        const maxActiveHearts = 50; // Increased max hearts
-        let activeHearts = 0;
-
-        const createHeart = (x, y) => {
-            if (activeHearts >= maxActiveHearts) return;
-
-            const heart = createElement('div', {
-                className: 'heart-particle',
-                textContent: hearts[Math.floor(random(0, hearts.length))]
-            });
-
-            Object.assign(heart.style, {
-                left: `${x}px`,
-                top: `${y}px`,
-                transform: `scale(${random(0.5, 0.8)})`,
-                opacity: '1'
-            });
-
-            document.body.appendChild(heart);
-            activeHearts++;
-
-            heart.addEventListener('animationend', () => {
-                heart.remove();
-                activeHearts--;
-            }, { once: true });
-        };
-
-        // Simplified mouse move handler
-        const handleMouseMove = (e) => {
-            const currentTime = Date.now();
-            if (currentTime - lastHeartTime < minTimeBetweenHearts) return;
-
-            const x = e.clientX;
-            const y = e.clientY;
-            const distance = Math.hypot(x - lastX, y - lastY);
-
-            if (distance > 5) { // Reduced minimum distance for smoother trail
-                createHeart(x, y);
-                lastX = x;
-                lastY = y;
-                lastHeartTime = currentTime;
-            }
-        };
-
-        const addHeartStyles = () => {
+        // ── Heart trail ───────────────────────────────────────────────────────────
+        const initializeHeartTrail = () => {
+            // Inject styles once
             const style = document.createElement('style');
             style.textContent = `
             .heart-particle {
@@ -699,141 +485,43 @@
                 pointer-events: none;
                 z-index: 1000;
                 font-size: 12px;
-                will-change: transform, opacity;
-                animation: float-and-fade 1.2s ease-out forwards;
+                animation: heart-float 1.2s ease-out forwards;
             }
-
-            @keyframes float-and-fade {
-                0% {
-                    transform: translate(0, 0) scale(1);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translate(${random(-20, 20)}px, -40px) scale(0);
-                    opacity: 0;
-                }
+            @keyframes heart-float {
+                0%   { transform: translate(0,0) scale(1); opacity: 1; }
+                100% { transform: translate(0,-40px) scale(0); opacity: 0; }
             }
         `;
             document.head.appendChild(style);
+
+            const pool = ['❤️', '💖', '💗', '💓', '💝'];
+            let lastX = 0, lastY = 0, lastTime = 0, active = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                const now = Date.now();
+                if (now - lastTime < 50 || active >= 50) return;
+                const dx = e.clientX - lastX, dy = e.clientY - lastY;
+                if (Math.hypot(dx, dy) < 5) return;
+
+                lastX = e.clientX; lastY = e.clientY; lastTime = now;
+                active++;
+
+                const heart = document.createElement('div');
+                heart.className = 'heart-particle';
+                heart.textContent = pool[Math.floor(random(0, pool.length))];
+                heart.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;`;
+                document.body.appendChild(heart);
+                heart.addEventListener('animationend', () => { heart.remove(); active--; }, { once: true });
+            }, { passive: true });
         };
 
-        return {
-            start: () => {
-                addHeartStyles();
-                document.addEventListener('mousemove', handleMouseMove, { passive: true });
-            },
-            stop: () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-            }
-        };
-    };
-
-    // Update your initializeApp function to include the heart trail system
-    const initializeApp = () => {
-        const background = $('.background-image-wrapper');
-        const images = $$('.background-image');
-        const cleanupFunctions = [];
-
-        // Initialize parallax
-        const parallax = createParallaxEffect(background, 30);
-        parallax.attach();
-        cleanupFunctions.push(() => parallax.detach());
-
-        // Initialize slideshow
-        const slideshow = createSlideshow(images);
-        const slideshowInterval = slideshow.start();
-        cleanupFunctions.push(() => slideshow.stop(slideshowInterval));
-
-        // Initialize butterfly system
-        const butterflySystem = initializeButterflySystem(butterflyConfig);
-        const butterflyInterval = butterflySystem.start();
-        cleanupFunctions.push(() => butterflySystem.stop(butterflyInterval));
-
-        // Initialize heart trail system
-        const heartTrail = createHeartTrailSystem();
-        heartTrail.start();
-        cleanupFunctions.push(() => heartTrail.stop());
-
-        return () => cleanupFunctions.forEach(cleanup => cleanup());
-    };
-
-    const initializeProgressiveImageLoading = () => {
-        const imageUrls = [
-            'img/reel/1000008582.jpg',
-            'img/reel/CanaKittyBackgroundWallpaper.png',
-            'img/reel/Canaria_1.png',
-            'img/reel/skeb_by_qum.png'
-        ];
-
-        const wrapper = document.querySelector('.background-image-wrapper');
-        let currentIndex = 0;
-        let images = [];
-
-        const loadImage = (url) => {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = url;
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-            });
-        };
-
-        const createBackgroundImage = (url) => {
-            const img = document.createElement('img');
-            img.className = 'background-image';
-            img.alt = 'VTuber Background';
-            img.src = url;  // Set src immediately
-            wrapper.appendChild(img);  // Changed to appendChild for consistent ordering
-            return img;
-        };
-
-        const showImage = (imgElement) => {
-            // Hide all images first
-            images.forEach(img => {
-                img.classList.remove('active');
-            });
-
-            // Show the current image
-            imgElement.classList.add('active');
-        };
-
-        const loadImages = async () => {
-            for (const url of imageUrls) {
-                try {
-                    await loadImage(url);  // Preload the image
-                    const imgElement = createBackgroundImage(url);
-                    images.push(imgElement);
-
-                    if (images.length === 1) {
-                        // Show the first image immediately
-                        showImage(imgElement);
-                    }
-                } catch (error) {
-                    console.error('Error loading image:', error);
-                }
-            }
-        };
-
-        // Start loading images immediately
-        loadImages();
-
-        // Setup rotation of images
-        setInterval(() => {
-            if (images.length > 1) {
-                currentIndex = (currentIndex + 1) % images.length;
-                showImage(images[currentIndex]);
-            }
-        }, 8000);
-    };
-
-    // Update your initialization
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeProgressiveImageLoading();
-        const cleanup = initializeApp();
-        window.__cleanup = cleanup;
-    });
-
-</script>
+        // ── Boot ─────────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeBackgroundImages();
+            initializeButterflySystem();
+            initializeHeartTrail();
+        });
+    </script>
 </body>
-</html>
 
+</html>

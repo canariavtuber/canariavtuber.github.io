@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cana's Wheel</title>
+    <link rel="icon" href="img/favicon.png" />
+    <style>
+        /* =====================================================================
+           RESET & TOKENS
+           ===================================================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #1a1a2e;
+            --surface:      #16213e;
+            --surface2:     #0f3460;
+            --surface3:     #1a2d55;
+            --accent:       #e94560;
+            --accent-h:     #c73652;
+            --green:        #2ecc71;
+            --text:         #eaeaea;
+            --muted:        #8888aa;
+            --border:       rgba(255,255,255,.08);
+            --radius:       10px;
+            --shadow:       0 8px 32px rgba(0,0,0,.5);
+
+            --p0:#e74c3c; --p1:#e67e22; --p2:#f1c40f; --p3:#2ecc71;
+            --p4:#1abc9c; --p5:#3498db; --p6:#9b59b6; --p7:#e91e8c;
+            --p8:#ff5722; --p9:#00bcd4; --p10:#8bc34a; --p11:#ff9800;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            background: var(--surface);
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.4);
+            flex-shrink: 0;
+        }
+        header h1 { font-size: 1.4rem; font-weight: 800; }
+        header h1 em { color: var(--accent); font-style: normal; }
+
+        .page {
+            width: 100%;
+            max-width: 980px;
+            padding: 28px 16px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .wheel-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .wheel-wrap {
+            position: relative;
+            width: 440px;
+            height: 440px;
+            flex-shrink: 0;
+        }
+
+        #wheelCanvas {
+            display: block;
+            border-radius: 50%;
+            filter: drop-shadow(0 0 22px rgba(233,69,96,.4));
+        }
+
+        .pointer {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left:  16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top:   32px solid var(--accent);
+            filter: drop-shadow(0 2px 6px rgba(233,69,96,.8));
+            z-index: 5;
+        }
+
+        .spin-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #spinBtn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,.15);
+            background: var(--accent);
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(233,69,96,.6);
+            transition: background .15s, transform .1s, box-shadow .15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        #spinBtn svg { width: 22px; height: 22px; fill: #fff; }
+        #spinBtn:hover  { background: var(--accent-h); box-shadow: 0 6px 26px rgba(233,69,96,.8); }
+        #spinBtn:active { transform: scale(.92); }
+        #spinBtn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+        .spin-hint {
+            font-size: .68rem;
+            color: var(--muted);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+
+        /* =====================================================================
+           TABBED PANEL
+           ===================================================================== */
+        .panel {
+            width: 100%;
+            max-width: 900px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .tab-bar {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 13px 8px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: .4px;
+            transition: color .15s, background .15s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.03); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .tab-pane { display: none; padding: 20px; }
+        .tab-pane.active { display: block; }
+
+        /* ── Entry Sets section ──────────────────────────────────────────── */
+        .sets-section {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .sets-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .sets-section-header h4 {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+        .sets-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sets-controls input[type="text"] {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: var(--text);
+            font-size: .82rem;
+            outline: none;
+            width: 160px;
+            transition: border-color .15s;
+        }
+        .sets-controls input[type="text"]:focus { border-color: var(--accent); }
+        .sets-controls input::placeholder { color: var(--muted); }
+
+        /* Sets list */
+        .sets-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .set-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 10px 4px 12px;
+            font-size: .8rem;
+            cursor: default;
+            transition: border-color .15s;
+        }
+        .set-chip.active-set {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .set-chip-name {
+            cursor: pointer;
+        }
+        .set-chip-name:hover { text-decoration: underline; }
+        .set-chip-del {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: .85rem;
+            padding: 0 2px;
+            line-height: 1;
+            transition: color .12s;
+        }
+        .set-chip-del:hover { color: var(--accent); }
+        .sets-empty { font-size: .8rem; color: var(--muted); padding: 4px 0; }
+
+        /* ── Entries toolbar ─────────────────────────────────────────────── */
+        .entries-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .entries-toolbar input[type="text"] {
+            flex: 1;
+            min-width: 140px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text);
+            font-size: .9rem;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .entries-toolbar input:focus { border-color: var(--accent); }
+        .entries-toolbar input::placeholder { color: var(--muted); }
+
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+        }
+        .btn-accent  { background: var(--accent);   color: #fff; }
+        .btn-accent:hover { background: var(--accent-h); }
+        .btn-surface { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+        .btn-surface:hover { color: var(--text); }
+        .btn-danger  { background: #3d1a1a; color: #e57373; border: 1px solid #5c2222; }
+        .btn-danger:hover  { background: #5c2222; }
+
+        /* Entry list */
+        #entryList {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--surface2) transparent;
+            margin-bottom: 12px;
+        }
+
+        .entry-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 6px 10px;
+            transition: background .15s, opacity .2s;
+        }
+        .entry-row:hover { background: var(--surface3); }
+        .entry-row.disabled-entry {
+            opacity: .45;
+        }
+        .entry-row.disabled-entry .entry-label-input {
+            text-decoration: line-through;
+            color: var(--muted);
+        }
+
+        /* enable/disable checkbox */
+        .entry-toggle {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .swatch {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,.2);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color .15s;
+        }
+        .swatch:hover { border-color: #fff; }
+        .swatch-wrap { position: relative; flex-shrink: 0; }
+        .swatch-wrap input[type="color"] {
+            position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+        }
+
+        .entry-label-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid transparent;
+            color: var(--text);
+            font-size: .88rem;
+            outline: none;
+            padding: 2px 4px;
+            min-width: 0;
+            transition: border-color .15s;
+        }
+        .entry-label-input:focus { border-bottom-color: var(--accent); }
+
+        .weight-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .weight-wrap label { font-size: .72rem; color: var(--muted); }
+        .weight-input {
+            width: 46px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 3px 6px;
+            color: var(--text);
+            font-size: .82rem;
+            outline: none;
+            text-align: center;
+        }
+        .weight-input:focus { border-color: var(--accent); }
+
+        .entry-del {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            line-height: 1;
+            transition: color .12s;
+            flex-shrink: 0;
+        }
+        .entry-del:hover { color: var(--accent); }
+
+        .entry-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── Results tab ─────────────────────────────────────────────────── */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .results-header h3 { font-size: .95rem; color: var(--muted); font-weight: 600; }
+
+        #resultLog {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 360px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--surface2) transparent;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            animation: slideIn .2s ease;
+        }
+        @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+        .log-num  { font-size: .72rem; color: var(--muted); min-width: 22px; }
+        .log-swatch { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+        .log-label { flex: 1; font-size: .9rem; }
+        .log-time  { font-size: .72rem; color: var(--muted); }
+
+        .empty-msg { color: var(--muted); font-size: .9rem; text-align: center; padding: 24px; }
+
+        /* ── Settings tab ─────────────────────────────────────────────────── */
+        .setting-group { margin-bottom: 20px; }
+        .setting-group h3 {
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 10px;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .setting-row label { font-size: .88rem; }
+
+        .setting-row input[type="number"],
+        .setting-row select {
+            width: 90px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: var(--text);
+            font-size: .88rem;
+            outline: none;
+        }
+        .setting-row input[type="number"]:focus,
+        .setting-row select:focus { border-color: var(--accent); }
+
+        .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+        .toggle {
+            position: relative;
+            width: 40px; height: 22px;
+            display: inline-block;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0;
+            background: var(--surface2);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: background .2s;
+            border: 1px solid var(--border);
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 2px;
+            background: var(--muted);
+            border-radius: 50%;
+            transition: transform .2s, background .2s;
+        }
+        .toggle input:checked + .toggle-slider { background: var(--accent); }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+
+        .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .file-row input[type="file"] { display: none; }
+        .file-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: .85rem;
+            color: var(--muted);
+            cursor: pointer;
+            transition: border-color .15s, color .15s;
+        }
+        .file-btn:hover { border-color: var(--accent); color: var(--text); }
+        #bgName { font-size: .8rem; color: var(--muted); }
+
+        /* =====================================================================
+           RESULT MODAL
+           ===================================================================== */
+        #modal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        #modal.open { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: 18px;
+            padding: 36px 44px;
+            text-align: center;
+            box-shadow: 0 12px 48px rgba(0,0,0,.65);
+            max-width: 340px;
+            width: 92%;
+            animation: popIn .22s cubic-bezier(.175,.885,.32,1.275);
+        }
+        @keyframes popIn {
+            from { transform: scale(.7); opacity: 0; }
+            to   { transform: scale(1);  opacity: 1; }
+        }
+
+        .modal-confetti { font-size: 2.6rem; margin-bottom: 8px; }
+        .modal-eyebrow  { font-size: .78rem; color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+        .modal-winner   { font-size: 2.1rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; word-break: break-word; }
+        .modal-swatch   { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-bottom: 20px; vertical-align: middle; }
+        .modal-actions  { display: flex; gap: 10px; }
+        .modal-actions .btn { flex: 1; }
+
+        @media (max-width: 640px) {
+            .wheel-wrap { width: 300px; height: 300px; }
+            .panel { border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span style="font-size:1.5rem"><img src="img/favicon.png" width="16" height="16"/></span>
+    <h1>Cana's <em>Wheel</em></h1>
+</header>
+
+<div class="page">
+
+    <div class="wheel-row">
+        <div class="wheel-wrap">
+            <canvas id="wheelCanvas" width="440" height="440"></canvas>
+            <div class="pointer"></div>
+        </div>
+        <div class="spin-col">
+            <button id="spinBtn" title="Spin (Ctrl+Enter)">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8
+                   c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31
+                   0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                SPIN
+            </button>
+            <span class="spin-hint">Ctrl+↵</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="entries">Entries</button>
+            <button class="tab-btn"        data-tab="results">Results</button>
+            <button class="tab-btn"        data-tab="settings">Settings</button>
+        </div>
+
+        <!-- ══ ENTRIES TAB ══════════════════════════════ -->
+        <div class="tab-pane active" id="tab-entries">
+
+            <!-- Entry Sets -->
+            <div class="sets-section">
+                <div class="sets-section-header">
+                    <h4>📂 Entry Sets</h4>
+                    <div class="sets-controls">
+                        <input id="setNameInput" type="text" placeholder="Set name…" maxlength="40" />
+                        <button class="btn btn-accent" id="saveSetBtn">💾 Save</button>
+                    </div>
+                </div>
+                <div class="sets-list" id="setsList">
+                    <span class="sets-empty" id="setsEmpty">No saved sets yet.</span>
+                </div>
+            </div>
+
+            <!-- Add-entry toolbar -->
+            <div class="entries-toolbar">
+                <input id="newLabel" type="text" placeholder="Type an entry and press Enter…" maxlength="80" />
+                <button class="btn btn-accent" id="addBtn">+ Add</button>
+            </div>
+
+            <!-- Entry list -->
+            <ul id="entryList"></ul>
+
+            <!-- Bulk actions -->
+            <div class="entry-actions">
+                <button class="btn btn-surface" id="shuffleBtn">🔀 Shuffle</button>
+                <button class="btn btn-surface" id="sortBtn">🔤 Sort A–Z</button>
+                <button class="btn btn-surface" id="enableAllBtn">✅ Enable All</button>
+                <button class="btn btn-danger"  id="clearBtn">🗑 Clear All</button>
+            </div>
+        </div>
+
+        <!-- ══ RESULTS TAB ══════════════════════════════ -->
+        <div class="tab-pane" id="tab-results">
+            <div class="results-header">
+                <h3>Win history</h3>
+                <button class="btn btn-danger" id="clearLogBtn">Clear log</button>
+            </div>
+            <ul id="resultLog">
+                <li class="empty-msg" id="logEmpty">No results yet — spin the wheel!</li>
+            </ul>
+        </div>
+
+        <!-- ══ SETTINGS TAB ══════════════════════════════ -->
+        <div class="tab-pane" id="tab-settings">
+
+            <div class="setting-group">
+                <h3>Spin behaviour</h3>
+                <div class="setting-row">
+                    <label>Spin duration (seconds)</label>
+                    <input type="number" id="cfg-duration" min="1" max="30" value="10" />
+                </div>
+                <div class="setting-row">
+                    <label>After spin action</label>
+                    <select id="cfg-action">
+                        <option value="none">Do nothing</option>
+                        <option value="disable">Disable winner</option>
+                        <option value="remove">Remove winner</option>
+                        <option value="flag">Highlight winner</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Wheel appearance</h3>
+                <div class="setting-row">
+                    <label>Show labels on wheel</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="cfg-labels" checked />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                    <label>Custom background image</label>
+                    <div class="file-row">
+                        <label class="file-btn" for="bgInput">📁 Choose image</label>
+                        <input type="file" id="bgInput" accept="image/*" />
+                        <span id="bgName">None</span>
+                        <button class="btn btn-surface" id="clearBgBtn" style="display:none;padding:6px 10px;font-size:.8rem;">✕ Remove</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div id="modal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+        <div class="modal-confetti">🎉</div>
+        <div class="modal-eyebrow">The wheel chose…</div>
+        <div class="modal-winner" id="modalWinner"></div>
+        <span class="modal-swatch" id="modalSwatch"></span>
+        <div class="modal-actions">
+            <button class="btn btn-surface" id="modalClose">Close</button>
+            <button class="btn btn-accent"  id="modalSpin">Spin Again</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── PALETTE ────────────────────────────────────────────────────────────────
+    const PALETTE = [
+        '#e74c3c','#e67e22','#f1c40f','#2ecc71',
+        '#1abc9c','#3498db','#9b59b6','#e91e8c',
+        '#ff5722','#00bcd4','#8bc34a','#ff9800',
+        '#607d8b','#795548','#9c27b0','#009688',
+    ];
+
+    // ── LOCALSTORAGE KEYS ──────────────────────────────────────────────────────
+    const LS_ENTRIES  = 'pickerWheel_entries';
+    const LS_SETS     = 'pickerWheel_sets';
+    const LS_CFG      = 'pickerWheel_cfg';
+    const LS_NEXT_ID  = 'pickerWheel_nextId';
+
+    // ── STATE ──────────────────────────────────────────────────────────────────
+    /*
+     * Entry shape: { id, label, color, weight, disabled }
+     * Config shape: { duration, action, showLabels, bgImage, bgName }
+     * Sets shape (localStorage): { [name]: Entry[] }
+     */
+    let nextId = 1;
+
+    function mkEntry(label, color, weight = 1, disabled = false) {
+        return { id: nextId++, label, color, weight: Math.max(1, weight), disabled };
+    }
+
+    const state = {
+        entries: [],
+        rotation:     -Math.PI / 2,
+        spinning:     false,
+        logCount:     0,
+        lastWinnerId: null,
+        cfg: {
+            duration:   5,
+            action:     'none',   // 'none' | 'disable' | 'remove' | 'flag'
+            showLabels: true,
+            bgImage:    null,
+            bgName:     '',
+        },
+    };
+
+    // ── PERSISTENCE ────────────────────────────────────────────────────────────
+
+    function saveEntries() {
+        // Store only serialisable fields (not HTMLImageElement)
+        const serialisable = state.entries.map(({ id, label, color, weight, disabled }) =>
+            ({ id, label, color, weight, disabled })
+        );
+        localStorage.setItem(LS_ENTRIES, JSON.stringify(serialisable));
+        localStorage.setItem(LS_NEXT_ID, String(nextId));
+    }
+
+    function loadEntries() {
+        try {
+            const raw = localStorage.getItem(LS_ENTRIES);
+            if (!raw) return false;
+            const arr = JSON.parse(raw);
+            const savedNextId = parseInt(localStorage.getItem(LS_NEXT_ID) || '1', 10);
+            nextId = savedNextId;
+            state.entries = arr.map(e => ({
+                id:       e.id,
+                label:    e.label,
+                color:    e.color,
+                weight:   e.weight ?? 1,
+                disabled: e.disabled ?? false,
+            }));
+            return true;
+        } catch { return false; }
+    }
+
+    function saveCfg() {
+        const { duration, action, showLabels, bgName } = state.cfg;
+        localStorage.setItem(LS_CFG, JSON.stringify({ duration, action, showLabels, bgName }));
+    }
+
+    function loadCfg() {
+        try {
+            const raw = localStorage.getItem(LS_CFG);
+            if (!raw) return;
+            const c = JSON.parse(raw);
+            if (c.duration)   state.cfg.duration   = c.duration;
+            if (c.action)     state.cfg.action      = c.action;
+            if (typeof c.showLabels === 'boolean') state.cfg.showLabels = c.showLabels;
+            // bgImage is not persisted (FileReader/object URL), bgName only informational
+            if (c.bgName)     state.cfg.bgName      = c.bgName;
+        } catch { /* ignore */ }
+    }
+
+    // ── SETS PERSISTENCE ────────────────────────────────────────────────────────
+
+    /** Load the full sets map from localStorage. Returns {} if none. */
+    function loadSetsMap() {
+        try {
+            const raw = localStorage.getItem(LS_SETS);
+            return raw ? JSON.parse(raw) : {};
+        } catch { return {}; }
+    }
+
+    /** Persist the full sets map. */
+    function saveSetsMap(map) {
+        localStorage.setItem(LS_SETS, JSON.stringify(map));
+    }
+
+    /** Save current entries under the given name. */
+    function saveSet(name) {
+        if (!name.trim()) return;
+        const map = loadSetsMap();
+        map[name.trim()] = state.entries.map(({ id, label, color, weight, disabled }) =>
+            ({ id, label, color, weight, disabled })
+        );
+        saveSetsMap(map);
+        renderSets();
+    }
+
+    /** Load a named set into current entries. */
+    function loadSet(name) {
+        const map = loadSetsMap();
+        const arr = map[name];
+        if (!arr) return;
+        // Restore entries without touching nextId (use existing ids from saved data)
+        // but ensure nextId > max existing id to avoid collisions on new adds
+        state.entries = arr.map(e => ({
+            id:       e.id,
+            label:    e.label,
+            color:    e.color,
+            weight:   e.weight ?? 1,
+            disabled: e.disabled ?? false,
+        }));
+        const maxId = state.entries.reduce((m, e) => Math.max(m, e.id), 0);
+        if (maxId >= nextId) nextId = maxId + 1;
+        saveEntries();
+        renderList();
+        renderSets();
+    }
+
+    /** Delete a named set. */
+    function deleteSet(name) {
+        const map = loadSetsMap();
+        delete map[name];
+        saveSetsMap(map);
+        renderSets();
+    }
+
+    // ── DOM REFERENCES ─────────────────────────────────────────────────────────
+    const canvas      = document.getElementById('wheelCanvas');
+    const ctx         = canvas.getContext('2d');
+    const spinBtn     = document.getElementById('spinBtn');
+    const entryListEl = document.getElementById('entryList');
+    const resultLogEl = document.getElementById('resultLog');
+    const modalEl     = document.getElementById('modal');
+    const modalWinner = document.getElementById('modalWinner');
+    const modalSwatch = document.getElementById('modalSwatch');
+    const bgNameEl    = document.getElementById('bgName');
+    const clearBgBtn  = document.getElementById('clearBgBtn');
+    const setsListEl  = document.getElementById('setsList');
+    const setsEmptyEl = document.getElementById('setsEmpty');
+    const setNameInput = document.getElementById('setNameInput');
+
+    // ── CANVAS RESIZE ──────────────────────────────────────────────────────────
+    function canvasSize() { return canvas.width; }
+
+    window.addEventListener('resize', () => {
+        const wrap = canvas.parentElement;
+        const s    = Math.min(wrap.clientWidth, wrap.clientHeight, 440);
+        if (canvas.width !== s) { canvas.width = s; canvas.height = s; }
+        drawWheel();
+    });
+
+    // ── DRAW ───────────────────────────────────────────────────────────────────
+    /** Only enabled entries participate in the wheel. */
+    function activeEntries() {
+        return state.entries.filter(e => !e.disabled);
+    }
+
+    function totalWeight() {
+        return activeEntries().reduce((s, e) => s + e.weight, 0);
+    }
+
+    function buildSlices() {
+        const tw = totalWeight();
+        const slices = [];
+        let angle = -Math.PI / 2;
+        for (const entry of activeEntries()) {
+            const arc = (entry.weight / tw) * Math.PI * 2;
+            slices.push({
+                entry,
+                startAngle: angle,
+                endAngle:   angle + arc,
+                midAngle:   angle + arc / 2,
+            });
+            angle += arc;
+        }
+        return slices;
+    }
+
+    function drawWheel() {
+        const S  = canvasSize();
+        const cx = S / 2;
+        const cy = S / 2;
+        const r  = S / 2 - 5;
+
+        ctx.clearRect(0, 0, S, S);
+
+        const active = activeEntries();
+
+        if (active.length === 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f3460';
+            ctx.fill();
+            ctx.fillStyle = '#8888aa';
+            ctx.font = `bold ${S * 0.048}px Segoe UI, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const msg = state.entries.length === 0
+                ? 'Add entries to spin!'
+                : 'All entries are disabled!';
+            ctx.fillText(msg, cx, cy);
+            ctx.restore();
+            return;
+        }
+
+        const slices = buildSlices();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(state.rotation);
+        ctx.translate(-cx, -cy);
+
+        slices.forEach(({ entry, startAngle, endAngle, midAngle }) => {
+            const isWinner = entry.id === state.lastWinnerId && state.cfg.action === 'flag';
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, startAngle, endAngle);
+            ctx.closePath();
+
+            if (state.cfg.bgImage) {
+                ctx.save();
+                ctx.clip();
+                ctx.drawImage(state.cfg.bgImage, cx - r, cy - r, r * 2, r * 2);
+                ctx.fillStyle = entry.color + 'aa';
+                ctx.fill();
+                ctx.restore();
+            } else {
+                ctx.fillStyle = isWinner ? lighten(entry.color) : entry.color;
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, startAngle, endAngle);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(255,255,255,.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if (state.cfg.showLabels) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(midAngle);
+
+                const fs = Math.max(9, Math.min(16, S * 0.034));
+                ctx.font = `bold ${fs}px Segoe UI, sans-serif`;
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,.7)';
+                ctx.shadowBlur  = 4;
+
+                const maxW = r * 0.68;
+                ctx.fillText(clip(ctx, entry.label, maxW), r - 10, 0);
+                ctx.restore();
+            }
+        });
+
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, S * 0.042, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    function lighten(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        const r = Math.min(255, ((n >> 16) & 0xff) + 60);
+        const g = Math.min(255, ((n >>  8) & 0xff) + 60);
+        const b = Math.min(255,  (n        & 0xff) + 60);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function clip(ctx, text, maxWidth) {
+        if (ctx.measureText(text).width <= maxWidth) return text;
+        let t = text;
+        while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) t = t.slice(0, -1);
+        return t + '…';
+    }
+
+    // ── SPIN ───────────────────────────────────────────────────────────────────
+    function spin() {
+        const active = activeEntries();
+        if (state.spinning || active.length === 0) return;
+
+        state.spinning    = true;
+        spinBtn.disabled  = true;
+
+        // Pick a weighted random winner from ACTIVE entries only
+        const tw = active.reduce((s, e) => s + e.weight, 0);
+        let pick = Math.random() * tw;
+        let winnerIdx = active.length - 1;
+        for (let i = 0; i < active.length; i++) {
+            pick -= active[i].weight;
+            if (pick <= 0) { winnerIdx = i; break; }
+        }
+        const winner = active[winnerIdx];
+
+        const slices      = buildSlices();
+        const winnerSlice = slices[winnerIdx];
+
+        const sliceArc = winnerSlice.endAngle - winnerSlice.startAngle;
+        const jitter   = (Math.random() - 0.5) * sliceArc * 0.6;
+        const targetBodyAngle = winnerSlice.midAngle + jitter;
+        const requiredRotation = -Math.PI / 2 - targetBodyAngle;
+        const delta = ((requiredRotation - state.rotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const extraSpins = (5 + Math.floor(Math.random() * 6)) * Math.PI * 2;
+        const totalSpin  = delta + extraSpins;
+
+        const startRot  = state.rotation;
+        const endRot    = startRot + totalSpin;
+        const duration  = state.cfg.duration * 1000;
+        const startTime = performance.now();
+
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+        function frame(now) {
+            const t = Math.min((now - startTime) / duration, 1);
+            state.rotation = startRot + totalSpin * easeOut(t);
+            drawWheel();
+
+            if (t < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                state.rotation   = endRot;
+                state.spinning   = false;
+                spinBtn.disabled = false;
+
+                state.lastWinnerId = winner.id;
+                drawWheel();
+                logResult(winner);
+                openModal(winner);
+
+                if (state.cfg.action === 'remove') {
+                    // find winner in full entries array and remove
+                    const idx = state.entries.findIndex(e => e.id === winner.id);
+                    if (idx !== -1) state.entries.splice(idx, 1);
+                    state.lastWinnerId = null;
+                    saveEntries();
+                    renderList();
+                    drawWheel();
+                } else if (state.cfg.action === 'disable') {
+                    winner.disabled = true;
+                    state.lastWinnerId = null;
+                    saveEntries();
+                    renderList();
+                    drawWheel();
+                }
+            }
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    // ── ENTRY LIST ─────────────────────────────────────────────────────────────
+    function renderList() {
+        entryListEl.replaceChildren();
+
+        if (state.entries.length === 0) {
+            const empty = document.createElement('li');
+            empty.className   = 'empty-msg';
+            empty.textContent = 'No entries yet.';
+            entryListEl.appendChild(empty);
+            drawWheel();
+            return;
+        }
+
+        for (const entry of state.entries) {
+            const li = document.createElement('li');
+            li.className  = 'entry-row' + (entry.disabled ? ' disabled-entry' : '');
+            li.dataset.id = entry.id;
+
+            // ── Enable/Disable checkbox ──
+            const toggleCb      = document.createElement('input');
+            toggleCb.type       = 'checkbox';
+            toggleCb.className  = 'entry-toggle';
+            toggleCb.checked    = !entry.disabled;
+            toggleCb.title      = entry.disabled ? 'Enable entry' : 'Disable entry';
+            toggleCb.addEventListener('change', () => {
+                entry.disabled = !toggleCb.checked;
+                li.classList.toggle('disabled-entry', entry.disabled);
+                saveEntries();
+                drawWheel();
+            });
+
+            // ── Swatch / colour picker ──
+            const swatchWrap  = document.createElement('div');
+            swatchWrap.className = 'swatch-wrap';
+
+            const swatch = document.createElement('div');
+            swatch.className        = 'swatch';
+            swatch.style.background = entry.color;
+            swatch.title            = 'Change colour';
+
+            const colorInput  = document.createElement('input');
+            colorInput.type   = 'color';
+            colorInput.value  = entry.color;
+
+            swatch.addEventListener('click', () => colorInput.click());
+            colorInput.addEventListener('input', e => {
+                entry.color             = e.target.value;
+                swatch.style.background = entry.color;
+                saveEntries();
+                drawWheel();
+            });
+
+            swatchWrap.appendChild(swatch);
+            swatchWrap.appendChild(colorInput);
+
+            // ── Label ──
+            const labelInput       = document.createElement('input');
+            labelInput.className   = 'entry-label-input';
+            labelInput.type        = 'text';
+            labelInput.value       = entry.label;
+            labelInput.title       = 'Click to edit';
+            labelInput.maxLength   = 80;
+            labelInput.addEventListener('input', e => {
+                entry.label = e.target.value;
+                saveEntries();
+                drawWheel();
+            });
+
+            // ── Weight ──
+            const weightWrap      = document.createElement('div');
+            weightWrap.className  = 'weight-wrap';
+
+            const weightLabel         = document.createElement('label');
+            weightLabel.textContent   = 'Wt';
+
+            const weightInput     = document.createElement('input');
+            weightInput.className = 'weight-input';
+            weightInput.type      = 'number';
+            weightInput.value     = entry.weight;
+            weightInput.min       = 1;
+            weightInput.max       = 99;
+            weightInput.addEventListener('change', e => {
+                const v        = parseInt(e.target.value, 10);
+                entry.weight   = isNaN(v) || v < 1 ? 1 : Math.min(v, 99);
+                e.target.value = entry.weight;
+                saveEntries();
+                drawWheel();
+            });
+
+            weightWrap.appendChild(weightLabel);
+            weightWrap.appendChild(weightInput);
+
+            // ── Delete ──
+            const delBtn          = document.createElement('button');
+            delBtn.className      = 'entry-del';
+            delBtn.title          = 'Remove';
+            delBtn.textContent    = '✕';
+            delBtn.addEventListener('click', () => {
+                state.entries.splice(state.entries.indexOf(entry), 1);
+                saveEntries();
+                renderList();
+            });
+
+            li.appendChild(toggleCb);
+            li.appendChild(swatchWrap);
+            li.appendChild(labelInput);
+            li.appendChild(weightWrap);
+            li.appendChild(delBtn);
+            entryListEl.appendChild(li);
+        }
+
+        drawWheel();
+    }
+
+    // ── SETS LIST ──────────────────────────────────────────────────────────────
+    function renderSets() {
+        setsListEl.replaceChildren();
+        const map = loadSetsMap();
+        const names = Object.keys(map);
+
+        if (names.length === 0) {
+            setsListEl.appendChild(setsEmptyEl);
+            return;
+        }
+
+        for (const name of names) {
+            const chip = document.createElement('span');
+            chip.className = 'set-chip';
+
+            const nameSpan       = document.createElement('span');
+            nameSpan.className   = 'set-chip-name';
+            nameSpan.textContent = name;
+            nameSpan.title       = `Load "${name}"`;
+            nameSpan.addEventListener('click', () => {
+                if (!confirm(`Load set "${name}"? Current entries will be replaced.`)) return;
+                loadSet(name);
+            });
+
+            const delBtn       = document.createElement('button');
+            delBtn.className   = 'set-chip-del';
+            delBtn.title       = `Delete set "${name}"`;
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', () => {
+                if (!confirm(`Delete set "${name}"?`)) return;
+                deleteSet(name);
+            });
+
+            chip.appendChild(nameSpan);
+            chip.appendChild(delBtn);
+            setsListEl.appendChild(chip);
+        }
+    }
+
+    function nextColor() {
+        return PALETTE[state.entries.length % PALETTE.length];
+    }
+
+    function addEntry(label) {
+        label = label.trim();
+        if (!label) return;
+        state.entries.push(mkEntry(label, nextColor()));
+        saveEntries();
+        renderList();
+    }
+
+    // ── LOG ────────────────────────────────────────────────────────────────────
+    function logResult(entry) {
+        state.logCount++;
+        document.getElementById('logEmpty')?.remove();
+
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const li = document.createElement('li');
+        li.className = 'log-item';
+
+        const numSpan         = document.createElement('span');
+        numSpan.className     = 'log-num';
+        numSpan.textContent   = `#${state.logCount}`;
+
+        const swatchSpan              = document.createElement('span');
+        swatchSpan.className          = 'log-swatch';
+        swatchSpan.style.background   = entry.color;
+
+        const labelSpan       = document.createElement('span');
+        labelSpan.className   = 'log-label';
+        labelSpan.textContent = entry.label;
+
+        const timeSpan        = document.createElement('span');
+        timeSpan.className    = 'log-time';
+        timeSpan.textContent  = time;
+
+        li.appendChild(numSpan);
+        li.appendChild(swatchSpan);
+        li.appendChild(labelSpan);
+        li.appendChild(timeSpan);
+
+        resultLogEl.insertBefore(li, resultLogEl.firstChild);
+    }
+
+    function resetLog() {
+        state.logCount = 0;
+        resultLogEl.replaceChildren();
+        const empty       = document.createElement('li');
+        empty.className   = 'empty-msg';
+        empty.id          = 'logEmpty';
+        empty.textContent = 'No results yet — spin the wheel!';
+        resultLogEl.appendChild(empty);
+    }
+
+    // ── MODAL ──────────────────────────────────────────────────────────────────
+    function openModal(entry) {
+        modalWinner.textContent      = entry.label;
+        modalSwatch.style.background = entry.color;
+        modalEl.classList.add('open');
+    }
+
+    function closeModal() {
+        modalEl.classList.remove('open');
+    }
+
+    // ── TABS ───────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ── EVENTS ─────────────────────────────────────────────────────────────────
+
+    spinBtn.addEventListener('click', spin);
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); spin(); }
+    });
+
+    const newLabelInput = document.getElementById('newLabel');
+    document.getElementById('addBtn').addEventListener('click', () => {
+        addEntry(newLabelInput.value);
+        newLabelInput.value = '';
+        newLabelInput.focus();
+    });
+    newLabelInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { addEntry(e.target.value); e.target.value = ''; }
+    });
+
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+        for (let i = state.entries.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [state.entries[i], state.entries[j]] = [state.entries[j], state.entries[i]];
+        }
+        saveEntries();
+        renderList();
+    });
+
+    document.getElementById('sortBtn').addEventListener('click', () => {
+        state.entries.sort((a, b) => a.label.localeCompare(b.label));
+        saveEntries();
+        renderList();
+    });
+
+    document.getElementById('enableAllBtn').addEventListener('click', () => {
+        state.entries.forEach(e => e.disabled = false);
+        saveEntries();
+        renderList();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        if (!state.entries.length) return;
+        if (!confirm('Remove all entries?')) return;
+        state.entries = [];
+        saveEntries();
+        renderList();
+    });
+
+    document.getElementById('clearLogBtn').addEventListener('click', resetLog);
+
+    // Sets
+    document.getElementById('saveSetBtn').addEventListener('click', () => {
+        const name = setNameInput.value.trim();
+        if (!name) { setNameInput.focus(); return; }
+        if (state.entries.length === 0) { alert('No entries to save.'); return; }
+        const map = loadSetsMap();
+        if (map[name] && !confirm(`Overwrite set "${name}"?`)) return;
+        saveSet(name);
+        setNameInput.value = '';
+    });
+    setNameInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('saveSetBtn').click();
+    });
+
+    // Settings
+    document.getElementById('cfg-duration').addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        if (v >= 1 && v <= 30) { state.cfg.duration = v; saveCfg(); }
+    });
+    document.getElementById('cfg-action').addEventListener('change', e => {
+        state.cfg.action = e.target.value;
+        saveCfg();
+    });
+    document.getElementById('cfg-labels').addEventListener('change', e => {
+        state.cfg.showLabels = e.target.checked;
+        saveCfg();
+        drawWheel();
+    });
+
+    document.getElementById('bgInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img   = new Image();
+            img.onload  = () => {
+                state.cfg.bgImage        = img;
+                state.cfg.bgName         = file.name;
+                bgNameEl.textContent     = file.name;
+                clearBgBtn.style.display = '';
+                drawWheel();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    });
+    clearBgBtn.addEventListener('click', () => {
+        state.cfg.bgImage        = null;
+        state.cfg.bgName         = '';
+        bgNameEl.textContent     = 'None';
+        clearBgBtn.style.display = 'none';
+        drawWheel();
+    });
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalSpin').addEventListener('click', () => { closeModal(); spin(); });
+    modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+
+    // ── INIT ───────────────────────────────────────────────────────────────────
+    loadCfg();
+
+    // Restore settings UI from cfg
+    document.getElementById('cfg-duration').value   = state.cfg.duration;
+    document.getElementById('cfg-action').value     = state.cfg.action;
+    document.getElementById('cfg-labels').checked   = state.cfg.showLabels;
+
+    // Load entries from localStorage, fall back to demo entries
+    const restored = loadEntries();
+    if (!restored) {
+        state.entries = [
+            mkEntry('Piwi #1',  PALETTE[0]),
+            mkEntry('Piwi #2',  PALETTE[1]),
+            mkEntry('Piwi #3',  PALETTE[2]),
+            mkEntry('Piwi #4',  PALETTE[3]),
+            mkEntry('Piwi #5',  PALETTE[4]),
+        ];
+    }
+
+    renderSets();
+    window.dispatchEvent(new Event('resize'));
+    renderList();
+</script>
+</body>
+</html>

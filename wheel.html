@@ -30,6 +30,14 @@
             --p8:#f2b0a0; --p9:#a0d8e0; --p10:#c4dba0; --p11:#f2c8a0;
         }
 
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
@@ -40,7 +48,102 @@
             align-items: center;
         }
 
+        /* =====================================================================
+           BACKGROUND IMAGE SLIDESHOW
+           ===================================================================== */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .background-image-wrapper {
+            position: absolute;
+            width: 130%;
+            height: 130%;
+            top: -15%;
+            left: -15%;
+            transform-style: preserve-3d;
+            transform: scale(1.1);
+            transition: transform 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                    135deg,
+                    rgba(252, 228, 236, 0.7) 0%,
+                    rgba(252, 228, 236, 0.6) 100%
+            );
+            backdrop-filter: blur(4px);
+            z-index: 2;
+        }
+
+        .background-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            will-change: opacity;
+        }
+
+        /* 50% of the original 0.6 = 0.3 */
+        .background-image.active {
+            opacity: 1;
+        }
+
+        /* =====================================================================
+           BUTTERFLY STYLES
+           ===================================================================== */
+        .butterfly {
+            position: fixed;
+            width: 45px;
+            height: 30px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.5; /* 50% reduced opacity */
+            animation: floatPath 40s linear;
+        }
+
+        .butterfly img {
+            width: 100%;
+            height: 100%;
+            transform-origin: center;
+            animation: flapWings 0.9s ease-in-out infinite;
+            transform: rotate(-90deg);
+        }
+
+        @keyframes flapWings {
+            0%   { transform: rotate(-90deg) scaleY(1); }
+            50%  { transform: rotate(-90deg) scaleY(0.5); }
+            100% { transform: rotate(-90deg) scaleY(1); }
+        }
+
+        @keyframes floatPath {
+            0%   { transform: translate(-50px, 0) rotate(0deg) scale(1); }
+            25%  { transform: translate(calc(25vw), 10vh) rotate(-5deg) scale(0.9); }
+            50%  { transform: translate(calc(50vw), -5vh) rotate(8deg) scale(1.1); }
+            75%  { transform: translate(calc(75vw), 15vh) rotate(-10deg) scale(0.95); }
+            100% { transform: translate(calc(100vw + 50px), 5vh) rotate(5deg) scale(1); }
+        }
+
+        /* =====================================================================
+           UI ELEMENTS (all above background & butterflies)
+           ===================================================================== */
         header {
+            position: relative;
+            z-index: 10;
             width: 100%;
             background: var(--surface);
             padding: 12px 28px;
@@ -54,6 +157,8 @@
         header h1 em { color: var(--accent); font-style: normal; }
 
         .page {
+            position: relative;
+            z-index: 10;
             width: 100%;
             max-width: 980px;
             padding: 28px 16px 40px;
@@ -537,6 +642,14 @@
 </head>
 <body>
 
+<!-- Background image slideshow (behind everything) -->
+<div class="background-container">
+    <div class="background-image-wrapper">
+        <div class="background-overlay"></div>
+        <!-- Images will be inserted here dynamically -->
+    </div>
+</div>
+
 <header>
     <span style="font-size:1.5rem"><img src="img/favicon.png" width="16" height="16"/></span>
     <h1>Cana's <em>Wheel</em></h1>
@@ -686,9 +799,9 @@
 <script>
     // ── PALETTE ────────────────────────────────────────────────────────────────
     const PALETTE = [
-     '#f2a0a0',  '#f2c4a0',  '#f5e0a0',  '#a8dbb8',
-     '#a0d4cb',  '#a8c8e8',  '#c9a8e0',  '#e8a0c8',
-     '#f2b0a0',  '#a0d8e0',  '#c4dba0',  '#f2c8a0',
+        '#f2a0a0',  '#f2c4a0',  '#f5e0a0',  '#a8dbb8',
+        '#a0d4cb',  '#a8c8e8',  '#c9a8e0',  '#e8a0c8',
+        '#f2b0a0',  '#a0d8e0',  '#c4dba0',  '#f2c8a0',
     ];
 
     // ── LOCALSTORAGE KEYS ──────────────────────────────────────────────────────
@@ -698,11 +811,6 @@
     const LS_NEXT_ID  = 'pickerWheel_nextId';
 
     // ── STATE ──────────────────────────────────────────────────────────────────
-    /*
-     * Entry shape: { id, label, color, weight, disabled }
-     * Config shape: { duration, action, showLabels, wheelSize, tickSound, tickVolume }
-     * Sets shape (localStorage): { [name]: Entry[] }
-     */
     let nextId = 1;
 
     function mkEntry(label, color, weight = 1, disabled = false) {
@@ -717,7 +825,7 @@
         lastWinnerId: null,
         cfg: {
             duration:   5,
-            action:     'none',   // 'none' | 'disable' | 'remove' | 'flag'
+            action:     'none',
             showLabels: true,
             wheelSize:  440,
             tickSound:  true,
@@ -727,7 +835,7 @@
 
     // ── TICK SOUND (Web Audio API) ─────────────────────────────────────────────
     let audioCtx    = null;
-    let tickBuffer  = null;   // pre-generated noise buffer, reused every tick
+    let tickBuffer  = null;
 
     function ensureAudioCtx() {
         if (!audioCtx) {
@@ -736,24 +844,16 @@
         return audioCtx;
     }
 
-    /**
-     * Make sure the AudioContext is running (un-suspended).
-     * Returns a promise so the caller can await it before the first tick.
-     */
     function resumeAudio() {
         const ctx = ensureAudioCtx();
         if (ctx.state === 'suspended') return ctx.resume();
         return Promise.resolve();
     }
 
-    /**
-     * Build (once) a short noise buffer we reuse on every tick.
-     * Avoids per-tick allocation and the randomness-phasing artefact.
-     */
     function ensureTickBuffer() {
         if (tickBuffer) return tickBuffer;
         const ctx  = ensureAudioCtx();
-        const len  = Math.ceil(ctx.sampleRate * 0.05); // 50 ms max
+        const len  = Math.ceil(ctx.sampleRate * 0.05);
         const buf  = ctx.createBuffer(1, len, ctx.sampleRate);
         const data = buf.getChannelData(0);
         for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
@@ -761,19 +861,15 @@
         return buf;
     }
 
-    /**
-     * Play a short percussive "tick" — a filtered noise snap + a low-end thump.
-     */
     function playTick() {
         if (!state.cfg.tickSound) return;
 
         const ctx = ensureAudioCtx();
-        if (ctx.state !== 'running') return;   // don't queue into a suspended ctx
+        if (ctx.state !== 'running') return;
 
         const now = ctx.currentTime;
         const vol = state.cfg.tickVolume;
 
-        // ── Noise layer: crisp "snap" ──────────────────────────────────────
         const noise  = ctx.createBufferSource();
         noise.buffer = ensureTickBuffer();
 
@@ -790,7 +886,6 @@
         bp.connect(noiseGain);
         noiseGain.connect(ctx.destination);
 
-        // ── Tone layer: low-end "thump" for body ───────────────────────────
         const osc = ctx.createOscillator();
         osc.type  = 'sine';
         osc.frequency.setValueAtTime(200, now);
@@ -803,7 +898,6 @@
         osc.connect(oscGain);
         oscGain.connect(ctx.destination);
 
-        // ── Start / stop — nodes self-clean after playback ─────────────────
         noise.start(now);
         noise.stop(now + 0.045);
         osc.start(now);
@@ -1020,7 +1114,7 @@
             ctx.moveTo(cx, cy);
             ctx.arc(cx, cy, r, startAngle, endAngle);
             ctx.closePath();
-            ctx.strokeStyle = 'rgba(255,255,255,.2)';
+            ctx.strokeStyle = 'rgba(0,0,0,.1)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
@@ -1049,7 +1143,7 @@
         ctx.arc(cx, cy, S * 0.042, 0, Math.PI * 2);
         ctx.fillStyle = '#1a1a2e';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.3)';
+        ctx.strokeStyle = 'rgba(0,0,0,.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
     }
@@ -1069,25 +1163,13 @@
         return t + '…';
     }
 
-    // ── HELPER: figure out which slice index the pointer is on ──────────────
-    /**
-     * The pointer sits at the very top of the wheel (12-o'clock, angle = -π/2).
-     * Given the current wheel body rotation we can find which slice the pointer
-     * falls into.  Returns the slice index (into activeEntries / slices array).
-     */
     function pointerSliceIndex(rotation) {
         const active = activeEntries();
         if (active.length === 0) return -1;
 
-        // The pointer is at world-angle = -π/2.
-        // Each slice's world-angle range is  (slice.startAngle + rotation)
-        // Easier: compute the "local" angle the pointer maps to on the
-        // un-rotated wheel.  localAngle = -π/2 - rotation, normalised to [0, 2π).
         let local = (-Math.PI / 2 - rotation) % (Math.PI * 2);
         if (local < 0) local += Math.PI * 2;
 
-        // Slices start at -π/2 (top) and go clockwise for 2π.
-        // Normalise startAngle the same way.
         const slices = buildSlices();
         for (let i = 0; i < slices.length; i++) {
             let s = (slices[i].startAngle) % (Math.PI * 2);
@@ -1095,15 +1177,13 @@
             let e = (slices[i].endAngle) % (Math.PI * 2);
             if (e < 0) e += Math.PI * 2;
 
-            // Handle wrap-around
             if (s <= e) {
                 if (local >= s && local < e) return i;
             } else {
-                // Slice wraps around 0/2π boundary
                 if (local >= s || local < e) return i;
             }
         }
-        return 0; // fallback
+        return 0;
     }
 
     // ── SPIN ───────────────────────────────────────────────────────────────────
@@ -1114,7 +1194,6 @@
         state.spinning    = true;
         spinBtn.disabled  = true;
 
-        // Ensure AudioContext is created & running before the first tick
         if (state.cfg.tickSound) {
             ensureTickBuffer();
             await resumeAudio();
@@ -1145,7 +1224,6 @@
         const duration  = state.cfg.duration * 1000;
         const startTime = performance.now();
 
-        // Track which slice the pointer is over so we tick on transitions
         let lastSliceIdx = pointerSliceIndex(state.rotation);
 
         function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
@@ -1155,7 +1233,6 @@
             state.rotation = startRot + totalSpin * easeOut(t);
             drawWheel();
 
-            // ── Tick detection ──────────────────────────────────
             const currentSliceIdx = pointerSliceIndex(state.rotation);
             if (currentSliceIdx !== lastSliceIdx) {
                 playTick();
@@ -1519,10 +1596,112 @@
     document.getElementById('modalSpin').addEventListener('click', () => { closeModal(); spin(); });
     modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
 
+    // ── BACKGROUND IMAGE SLIDESHOW ─────────────────────────────────────────────
+    const initializeProgressiveImageLoading = () => {
+        const imageUrls = [
+            'img/reel/1000008582.jpg',
+            'img/reel/CanaKittyBackgroundWallpaper.png',
+            'img/reel/Canaria_1.png',
+            'img/reel/skeb_by_qum.png'
+        ];
+
+        const wrapper = document.querySelector('.background-image-wrapper');
+        let currentIndex = 0;
+        let images = [];
+
+        const loadImage = (url) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = url;
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+            });
+        };
+
+        const createBackgroundImage = (url) => {
+            const img = document.createElement('img');
+            img.className = 'background-image';
+            img.alt = 'VTuber Background';
+            img.src = url;
+            wrapper.appendChild(img);
+            return img;
+        };
+
+        const showImage = (imgElement) => {
+            images.forEach(img => {
+                img.classList.remove('active');
+            });
+            imgElement.classList.add('active');
+        };
+
+        const loadImages = async () => {
+            for (const url of imageUrls) {
+                try {
+                    await loadImage(url);
+                    const imgElement = createBackgroundImage(url);
+                    images.push(imgElement);
+
+                    if (images.length === 1) {
+                        showImage(imgElement);
+                    }
+                } catch (error) {
+                    console.error('Error loading image:', error);
+                }
+            }
+        };
+
+        loadImages();
+
+        setInterval(() => {
+            if (images.length > 1) {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(images[currentIndex]);
+            }
+        }, 8000);
+    };
+
+    // ── BUTTERFLY SYSTEM ───────────────────────────────────────────────────────
+    const random = (min, max) => min + Math.random() * (max - min);
+
+    const createButterfly = () => {
+        const butterfly = document.createElement('div');
+        butterfly.className = 'butterfly';
+
+        const img = document.createElement('img');
+        img.src = 'img/butterfly-static.svg';
+
+        const size = random(15, 30);
+        butterfly.style.top = `${random(0, window.innerHeight * 0.8)}px`;
+        butterfly.style.width = `${size}px`;
+        butterfly.style.height = `${size * 1.5}px`;
+        butterfly.style.animationDuration = `${random(35, 60)}s`;
+
+        img.style.filter = `hue-rotate(${random(0, 360)}deg)`;
+
+        butterfly.appendChild(img);
+        document.body.appendChild(butterfly);
+
+        butterfly.addEventListener('animationend', () => butterfly.remove());
+        return butterfly;
+    };
+
+    const initializeButterflySystem = () => {
+        // Create initial butterflies
+        for (let i = 0; i < 3; i++) {
+            setTimeout(createButterfly, i * 2000);
+        }
+
+        // Continuously create butterflies
+        setInterval(() => {
+            if (Math.random() > 0.5) {
+                createButterfly();
+            }
+        }, 4000);
+    };
+
     // ── INIT ───────────────────────────────────────────────────────────────────
     loadCfg();
 
-    // Restore settings UI from cfg
     document.getElementById('cfg-duration').value   = state.cfg.duration;
     document.getElementById('cfg-action').value     = state.cfg.action;
     document.getElementById('cfg-labels').checked   = state.cfg.showLabels;
@@ -1530,7 +1709,6 @@
     document.getElementById('cfg-tick').checked     = state.cfg.tickSound;
     document.getElementById('cfg-tick-vol').value   = Math.round(state.cfg.tickVolume * 100);
 
-    // Load entries from localStorage, fall back to demo entries
     const restored = loadEntries();
     if (!restored) {
         state.entries = [
@@ -1545,6 +1723,18 @@
     renderSets();
     applyWheelSize(state.cfg.wheelSize);
     renderList();
+
+    // Start background & butterflies
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeProgressiveImageLoading();
+        initializeButterflySystem();
+    });
+
+    // If DOM is already loaded (script at end of body)
+    if (document.readyState !== 'loading') {
+        initializeProgressiveImageLoading();
+        initializeButterflySystem();
+    }
 </script>
 </body>
 </html>

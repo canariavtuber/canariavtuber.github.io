@@ -170,9 +170,9 @@
 
         .wheel-row {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 16px;
+            gap: 96px;
         }
 
         .wheel-wrap {
@@ -204,34 +204,32 @@
 
         .spin-col {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
             gap: 12px;
         }
 
         #spinBtn {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            border: 4px solid rgba(255,255,255,.15);
-            background: var(--accent);
-            color: #fff;
-            font-size: .8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
+            width: 350px;
+            border: none;
+            background: transparent;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(233,69,96,.6);
-            transition: background .15s, transform .1s, box-shadow .15s;
+            padding: 0;
+            transition: transform .15s, filter .15s;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
         }
-        #spinBtn svg { width: 22px; height: 22px; fill: #fff; }
-        #spinBtn:hover  { background: var(--accent-h); box-shadow: 0 6px 26px rgba(233,69,96,.8); }
+        #spinBtn img {
+            width: 100%;
+            height: 100%;
+            border-radius: 5%;
+            object-fit: cover;
+            display: block;
+        }
+        #spinBtn:hover  { transform: scale(1.08); filter: brightness(1.15); }
         #spinBtn:active { transform: scale(.92); }
-        #spinBtn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+        #spinBtn:disabled { opacity: .8; cursor: not-allowed; transform: none; filter: none; }
 
         .spin-hint {
             font-size: .68rem;
@@ -664,12 +662,9 @@
         </div>
         <div class="spin-col">
             <button id="spinBtn" title="Spin (Ctrl+Enter)">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8
-                   c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31
-                   0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                SPIN
+                <img src="img/spin/spin-1.png" alt="Spin"
+                     onmouseenter="this.src='img/spin/spin-hover.png'"
+                     onmouseleave="this.src='img/spin/spin-1.png'" />
             </button>
             <span class="spin-hint">Ctrl+↵</span>
         </div>
@@ -797,6 +792,13 @@
 </div>
 
 <script>
+    // ── SPIN BUTTON IMAGE PATHS ────────────────────────────────────────────────
+    const SPIN_IMG_DEFAULT = 'img/spin/spin-1.png';
+    const SPIN_IMG_HOVER   = 'img/spin/spin-hover.png';
+    const SPIN_IMG_SMASH   = 'img/spin/spin-smash.gif';
+    // ── BUTTON CLICK SOUND ─────────────────────────────────────────────────────
+    const buttonClickSound = new Audio('sound/button.mp3');
+
     // ── PALETTE ────────────────────────────────────────────────────────────────
     const PALETTE = [
         '#f2a0a0',  '#f2c4a0',  '#f5e0a0',  '#a8dbb8',
@@ -1003,6 +1005,7 @@
     const canvas      = document.getElementById('wheelCanvas');
     const ctx         = canvas.getContext('2d');
     const spinBtn     = document.getElementById('spinBtn');
+    const spinBtnImg  = spinBtn.querySelector('img');
     const entryListEl = document.getElementById('entryList');
     const resultLogEl = document.getElementById('resultLog');
     const modalEl     = document.getElementById('modal');
@@ -1011,6 +1014,26 @@
     const setsListEl  = document.getElementById('setsList');
     const setsEmptyEl = document.getElementById('setsEmpty');
     const setNameInput = document.getElementById('setNameInput');
+
+    // ── SPIN BUTTON IMAGE HELPERS ──────────────────────────────────────────────
+    function setSpinBtnSmash() {
+        // Append a cache-buster so the GIF restarts from frame 1
+        spinBtnImg.src = SPIN_IMG_SMASH + '?t=' + Date.now();
+        // Remove hover listeners while smashing / spinning
+        spinBtnImg.onmouseenter = null;
+        spinBtnImg.onmouseleave = null;
+    }
+
+    function resetSpinBtnImage() {
+        const isHovered = spinBtn.matches(':hover');
+        spinBtnImg.src = isHovered ? SPIN_IMG_HOVER : SPIN_IMG_DEFAULT;
+        // Restore hover listeners
+        spinBtnImg.onmouseenter = () => { if (!state.spinning) spinBtnImg.src = SPIN_IMG_HOVER; };
+        spinBtnImg.onmouseleave = () => { if (!state.spinning) spinBtnImg.src = SPIN_IMG_DEFAULT; };
+    }
+
+    // Initialise hover listeners on load
+    resetSpinBtnImage();
 
     // ── CANVAS RESIZE ──────────────────────────────────────────────────────────
     function canvasSize() { return canvas.width; }
@@ -1194,6 +1217,9 @@
         state.spinning    = true;
         spinBtn.disabled  = true;
 
+        // Show smash animation immediately
+        setSpinBtnSmash();
+
         if (state.cfg.tickSound) {
             ensureTickBuffer();
             await resumeAudio();
@@ -1222,11 +1248,19 @@
         const startRot  = state.rotation;
         const endRot    = startRot + totalSpin;
         const duration  = state.cfg.duration * 1000;
-        const startTime = performance.now();
 
         let lastSliceIdx = pointerSliceIndex(state.rotation);
 
         function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+        // Delay the wheel spin by 400ms to match the smash animation
+        await new Promise(resolve => setTimeout(resolve, 400));
+
+        // Play button click sound
+        buttonClickSound.currentTime = 0;
+        buttonClickSound.play().catch(() => {});
+
+        const startTime = performance.now();
 
         function frame(now) {
             const t = Math.min((now - startTime) / duration, 1);
@@ -1245,6 +1279,9 @@
                 state.rotation   = endRot;
                 state.spinning   = false;
                 spinBtn.disabled = false;
+
+                // Revert spin button image back to default/hover
+                resetSpinBtnImage();
 
                 state.lastWinnerId = winner.id;
                 drawWheel();

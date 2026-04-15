@@ -610,6 +610,17 @@
         }
         #modal.open { display: flex; }
 
+        #shareModal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        #shareModal.open { display: flex; }
+
         .modal-box {
             background: var(--surface);
             border-radius: 18px;
@@ -631,6 +642,32 @@
         .modal-swatch   { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-bottom: 20px; vertical-align: middle; }
         .modal-actions  { display: flex; gap: 10px; }
         .modal-actions .btn { flex: 1; }
+
+        /* ── Share modal extras ──────────────────────────────────────────── */
+        .share-url-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .share-url-input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: .82rem;
+            outline: none;
+            min-width: 0;
+            word-break: break-all;
+        }
+        .share-url-input:focus { border-color: var(--accent); }
+        .share-copied-msg {
+            font-size: .78rem;
+            color: var(--green);
+            margin-top: 6px;
+            min-height: 1.2em;
+        }
 
         @media (max-width: 640px) {
             .wheel-wrap { width: 300px; height: 300px; }
@@ -709,6 +746,7 @@
                 <button class="btn btn-surface" id="sortBtn">🔤 Sort A–Z</button>
                 <button class="btn btn-surface" id="enableAllBtn">✅ Enable All</button>
                 <button class="btn btn-danger"  id="clearBtn">🗑 Clear All</button>
+                <button class="btn btn-accent"  id="shareBtn">🔗 Share</button>
             </div>
         </div>
 
@@ -778,6 +816,7 @@
 
 </div>
 
+<!-- Winner modal -->
 <div id="modal" role="dialog" aria-modal="true">
     <div class="modal-box">
         <div class="modal-confetti">🎉</div>
@@ -787,6 +826,23 @@
         <div class="modal-actions">
             <button class="btn btn-surface" id="modalClose">Close</button>
             <button class="btn btn-accent"  id="modalSpin">Spin Again</button>
+        </div>
+    </div>
+</div>
+
+<!-- Share modal -->
+<div id="shareModal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+        <div class="modal-confetti">🔗</div>
+        <div class="modal-eyebrow">Share this wheel</div>
+        <div class="modal-winner" style="font-size:1.1rem; color: var(--text);">Copy the link below to share your wheel options with others!</div>
+        <div class="share-url-wrapper">
+            <input type="text" class="share-url-input" id="shareUrlInput" readonly />
+            <button class="btn btn-accent" id="copyShareBtn">📋 Copy</button>
+        </div>
+        <div class="share-copied-msg" id="shareCopiedMsg"></div>
+        <div class="modal-actions" style="margin-top: 12px;">
+            <button class="btn btn-surface" id="shareModalClose">Close</button>
         </div>
     </div>
 </div>
@@ -1633,6 +1689,78 @@
     document.getElementById('modalSpin').addEventListener('click', () => { closeModal(); spin(); });
     modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
 
+    // ── SHARE FEATURE ──────────────────────────────────────────────────────────
+    const shareModalEl     = document.getElementById('shareModal');
+    const shareUrlInput    = document.getElementById('shareUrlInput');
+    const shareCopiedMsg   = document.getElementById('shareCopiedMsg');
+
+    function generateShareUrl() {
+        const data = state.entries.map(({ label, color, weight, disabled }) =>
+            ({ label, color, weight, disabled })
+        );
+        const json = JSON.stringify(data);
+        const encoded = btoa(unescape(encodeURIComponent(json)));
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        url.searchParams.set('shared', encoded);
+        return url.toString();
+    }
+
+    function openShareModal() {
+        if (state.entries.length === 0) {
+            alert('No entries to share.');
+            return;
+        }
+        const url = generateShareUrl();
+        shareUrlInput.value = url;
+        shareCopiedMsg.textContent = '';
+        shareModalEl.classList.add('open');
+        shareUrlInput.select();
+    }
+
+    function closeShareModal() {
+        shareModalEl.classList.remove('open');
+    }
+
+    function loadSharedEntries() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('shared');
+            if (!encoded) return false;
+            const json = decodeURIComponent(escape(atob(encoded)));
+            const arr = JSON.parse(json);
+            if (!Array.isArray(arr) || arr.length === 0) return false;
+            state.entries = arr.map(e => mkEntry(
+                e.label || 'Entry',
+                e.color || PALETTE[state.entries.length % PALETTE.length],
+                e.weight ?? 1,
+                e.disabled ?? false
+            ));
+            saveEntries();
+            // Clean the URL so the share param doesn't persist on reload
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.search = '';
+            window.history.replaceState({}, '', cleanUrl.toString());
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    document.getElementById('shareBtn').addEventListener('click', openShareModal);
+    document.getElementById('copyShareBtn').addEventListener('click', () => {
+        shareUrlInput.select();
+        navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+            shareCopiedMsg.textContent = '✅ Copied to clipboard!';
+        }).catch(() => {
+            document.execCommand('copy');
+            shareCopiedMsg.textContent = '✅ Copied!';
+        });
+    });
+    document.getElementById('shareModalClose').addEventListener('click', closeShareModal);
+    shareModalEl.addEventListener('click', e => { if (e.target === shareModalEl) closeShareModal(); });
+
     // ── BACKGROUND IMAGE SLIDESHOW ─────────────────────────────────────────────
     const initializeProgressiveImageLoading = () => {
         const imageUrls = [
@@ -1746,15 +1874,19 @@
     document.getElementById('cfg-tick').checked     = state.cfg.tickSound;
     document.getElementById('cfg-tick-vol').value   = Math.round(state.cfg.tickVolume * 100);
 
-    const restored = loadEntries();
-    if (!restored) {
-        state.entries = [
-            mkEntry('Piwi #1',  PALETTE[0]),
-            mkEntry('Piwi #2',  PALETTE[1]),
-            mkEntry('Piwi #3',  PALETTE[2]),
-            mkEntry('Piwi #4',  PALETTE[3]),
-            mkEntry('Piwi #5',  PALETTE[4]),
-        ];
+    // Check for shared entries in URL first, then fall back to localStorage
+    const sharedLoaded = loadSharedEntries();
+    if (!sharedLoaded) {
+        const restored = loadEntries();
+        if (!restored) {
+            state.entries = [
+                mkEntry('Piwi #1',  PALETTE[0]),
+                mkEntry('Piwi #2',  PALETTE[1]),
+                mkEntry('Piwi #3',  PALETTE[2]),
+                mkEntry('Piwi #4',  PALETTE[3]),
+                mkEntry('Piwi #5',  PALETTE[4]),
+            ];
+        }
     }
 
     renderSets();
@@ -1772,6 +1904,7 @@
         initializeProgressiveImageLoading();
         initializeButterflySystem();
     }
+
 </script>
 </body>
 </html>

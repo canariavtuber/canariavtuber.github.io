@@ -672,9 +672,9 @@
         <div class="tab-pane active" id="tab-entries">
             <div class="sets-section">
                 <div class="sets-section-header">
-                    <h4>📂 Entry Sets</h4>
+                    <h4>📂 Saved Wheels</h4>
                     <div class="sets-controls">
-                        <input id="setNameInput" type="text" placeholder="Set name…" maxlength="40" />
+                        <input id="setNameInput" type="text" placeholder="Wheel name…" maxlength="40" />
                         <button class="btn btn-accent" id="saveSetBtn">💾 Save</button>
                     </div>
                 </div>
@@ -1512,13 +1512,13 @@
                     className: 'set-chip-name',
                     textContent: name,
                     title: `Load "${name}"`,
-                    onclick: () => { if (confirm(`Load set "${name}"? Current entries will be replaced.`)) loadSet(name); },
+                    onclick: () => { if (confirm(`Load wheel "${name}"? Current entries will be replaced.`)) loadSet(name); },
                 }),
                 el('button', {
                     className: 'set-chip-del',
-                    title: `Delete set "${name}"`,
+                    title: `Delete wheel "${name}"`,
                     textContent: '✕',
-                    onclick: () => { if (confirm(`Delete set "${name}"?`)) deleteSet(name); },
+                    onclick: () => { if (confirm(`Delete wheel "${name}"?`)) deleteSet(name); },
                 }),
             ]));
         }

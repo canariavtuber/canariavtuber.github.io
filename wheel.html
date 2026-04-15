@@ -5,38 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cana's Wheel</title>
     <link rel="icon" href="img/favicon.png" />
+    <!-- Preload critical images -->
+    <link rel="preload" as="image" href="img/spin/spin-1.png" />
+    <link rel="preload" as="image" href="img/spin/spin-hover.png" />
+    <link rel="preload" as="image" href="img/favicon.png" />
     <style>
-        /* =====================================================================
+        /* =================================================================
            RESET & TOKENS
-           ===================================================================== */
+           ================================================================= */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg:           #fce4ec;
-            --surface:      #f8bbd0;
-            --surface2:     #e1bee7;
-            --surface3:     #f0bbdd;
-            --accent:       #e91e63;
-            --accent-h:     #c2185b;
-            --green:        #66bb6a;
-            --text:         #2e2e3a;
-            --muted:        #8e7b8e;
-            --border:       rgba(255,255,255,.08);
-            --radius:       10px;
-            --shadow:       0 8px 32px rgba(0,0,0,.5);
-
-            --p0:#f2a0a0; --p1:#f2c4a0; --p2:#f5e0a0; --p3:#a8dbb8;
-            --p4:#a0d4cb; --p5:#a8c8e8; --p6:#c9a8e0; --p7:#e8a0c8;
-            --p8:#f2b0a0; --p9:#a0d8e0; --p10:#c4dba0; --p11:#f2c8a0;
+            --bg:       #fce4ec;
+            --surface:  #f8bbd0;
+            --surface2: #e1bee7;
+            --surface3: #f0bbdd;
+            --accent:   #e91e63;
+            --accent-h: #c2185b;
+            --green:    #66bb6a;
+            --text:     #2e2e3a;
+            --muted:    #8e7b8e;
+            --border:   rgba(255,255,255,.08);
+            --radius:   10px;
+            --shadow:   0 8px 32px rgba(0,0,0,.5);
         }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        html { overflow-x: hidden; }
 
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
@@ -48,25 +42,25 @@
             align-items: center;
         }
 
-        /* =====================================================================
+        /* Shared focus/placeholder for text-like inputs */
+        input:focus, select:focus { border-color: var(--accent); }
+        input::placeholder { color: var(--muted); }
+
+        /* =================================================================
            BACKGROUND IMAGE SLIDESHOW
-           ===================================================================== */
+           ================================================================= */
         .background-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
             overflow: hidden;
             z-index: 0;
         }
 
         .background-image-wrapper {
             position: absolute;
-            width: 130%;
-            height: 130%;
-            top: -15%;
-            left: -15%;
+            width: 130%; height: 130%;
+            top: -15%; left: -15%;
             transform-style: preserve-3d;
             transform: scale(1.1);
             transition: transform 0.3s ease-out;
@@ -75,72 +69,57 @@
 
         .background-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                    135deg,
-                    rgba(252, 228, 236, 0.7) 0%,
-                    rgba(252, 228, 236, 0.6) 100%
-            );
+            inset: 0;
+            background: linear-gradient(135deg, rgba(252,228,236,.7), rgba(252,228,236,.6));
             z-index: 2;
         }
 
         .background-image {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             opacity: 0;
             transition: opacity 1s ease-in-out;
             will-change: opacity;
         }
+        .background-image.active { opacity: 1; }
 
-        /* 50% of the original 0.6 = 0.3 */
-        .background-image.active {
-            opacity: 1;
-        }
-
-        /* =====================================================================
+        /* =================================================================
            BUTTERFLY STYLES
-           ===================================================================== */
+           ================================================================= */
         .butterfly {
             position: fixed;
-            width: 45px;
-            height: 30px;
             left: 0;
             z-index: 1;
             pointer-events: none;
-            opacity: 0.5; /* 50% reduced opacity */
+            opacity: 0.5;
             animation: floatPath 40s linear;
+            will-change: transform;
+            contain: layout style;
         }
 
         .butterfly img {
-            width: 100%;
-            height: 100%;
-            transform-origin: center;
+            width: 100%; height: 100%;
             animation: flapWings 0.9s ease-in-out infinite;
             transform: rotate(-90deg);
         }
 
         @keyframes flapWings {
-            0%   { transform: rotate(-90deg) scaleY(1); }
-            50%  { transform: rotate(-90deg) scaleY(0.5); }
-            100% { transform: rotate(-90deg) scaleY(1); }
+            0%, 100% { transform: rotate(-90deg) scaleY(1); }
+            50%      { transform: rotate(-90deg) scaleY(0.5); }
         }
 
         @keyframes floatPath {
             0%   { transform: translate(-50px, 0) rotate(0deg) scale(1); }
-            25%  { transform: translate(calc(25vw), 10vh) rotate(-5deg) scale(0.9); }
-            50%  { transform: translate(calc(50vw), -5vh) rotate(8deg) scale(1.1); }
-            75%  { transform: translate(calc(75vw), 15vh) rotate(-10deg) scale(0.95); }
+            25%  { transform: translate(25vw, 10vh) rotate(-5deg) scale(0.9); }
+            50%  { transform: translate(50vw, -5vh) rotate(8deg) scale(1.1); }
+            75%  { transform: translate(75vw, 15vh) rotate(-10deg) scale(0.95); }
             100% { transform: translate(calc(100vw + 50px), 5vh) rotate(5deg) scale(1); }
         }
 
-        /* =====================================================================
-           UI ELEMENTS (all above background & butterflies)
-           ===================================================================== */
+        /* =================================================================
+           UI ELEMENTS
+           ================================================================= */
         header {
             position: relative;
             z-index: 10;
@@ -170,16 +149,15 @@
 
         .wheel-row {
             display: flex;
-            flex-direction: row;
             align-items: center;
             gap: 96px;
         }
 
         .wheel-wrap {
             position: relative;
-            width: 440px;
-            height: 440px;
+            width: 440px; height: 440px;
             flex-shrink: 0;
+            will-change: transform;
         }
 
         #wheelCanvas {
@@ -190,14 +168,12 @@
 
         .pointer {
             position: absolute;
-            top: -14px;
-            left: 50%;
+            top: -14px; left: 50%;
             transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left:  16px solid transparent;
+            width: 0; height: 0;
+            border-left: 16px solid transparent;
             border-right: 16px solid transparent;
-            border-top:   32px solid var(--accent);
+            border-top: 32px solid var(--accent);
             filter: drop-shadow(0 2px 6px rgba(233,69,96,.8));
             z-index: 5;
         }
@@ -221,13 +197,12 @@
             justify-content: center;
         }
         #spinBtn img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 5%;
             object-fit: cover;
             display: block;
         }
-        #spinBtn:hover  { transform: scale(1.08); filter: brightness(1.15); }
+        #spinBtn:hover { transform: scale(1.08); filter: brightness(1.15); }
         #spinBtn:active { transform: scale(.92); }
         #spinBtn:disabled { opacity: .8; cursor: not-allowed; transform: none; filter: none; }
 
@@ -238,9 +213,9 @@
             text-transform: uppercase;
         }
 
-        /* =====================================================================
+        /* =================================================================
            TABBED PANEL
-           ===================================================================== */
+           ================================================================= */
         .panel {
             width: 100%;
             max-width: 900px;
@@ -270,11 +245,12 @@
         }
         .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.03); }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-btn:disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
 
         .tab-pane { display: none; padding: 20px; }
         .tab-pane.active { display: block; }
 
-        /* ── Entry Sets section ──────────────────────────────────────────── */
+        /* ── Entry Sets ─────────────────────────────────────────── */
         .sets-section {
             background: var(--surface2);
             border: 1px solid var(--border);
@@ -314,10 +290,7 @@
             width: 160px;
             transition: border-color .15s;
         }
-        .sets-controls input[type="text"]:focus { border-color: var(--accent); }
-        .sets-controls input::placeholder { color: var(--muted); }
 
-        /* Sets list */
         .sets-list {
             display: flex;
             flex-wrap: wrap;
@@ -335,13 +308,7 @@
             cursor: default;
             transition: border-color .15s;
         }
-        .set-chip.active-set {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .set-chip-name {
-            cursor: pointer;
-        }
+        .set-chip-name { cursor: pointer; }
         .set-chip-name:hover { text-decoration: underline; }
         .set-chip-del {
             background: none;
@@ -356,7 +323,7 @@
         .set-chip-del:hover { color: var(--accent); }
         .sets-empty { font-size: .8rem; color: var(--muted); padding: 4px 0; }
 
-        /* ── Entries toolbar ─────────────────────────────────────────────── */
+        /* ── Entries toolbar ─────────────────────────────────────── */
         .entries-toolbar {
             display: flex;
             gap: 8px;
@@ -375,8 +342,6 @@
             outline: none;
             transition: border-color .15s;
         }
-        .entries-toolbar input:focus { border-color: var(--accent); }
-        .entries-toolbar input::placeholder { color: var(--muted); }
 
         .btn {
             border: none;
@@ -384,16 +349,18 @@
             padding: 8px 14px;
             font-size: .85rem;
             font-weight: 600;
+            
             cursor: pointer;
             transition: background .15s, color .15s;
             white-space: nowrap;
         }
-        .btn-accent  { background: var(--accent);   color: #fff; }
+        .btn-accent { background: var(--accent); color: #fff; }
         .btn-accent:hover { background: var(--accent-h); }
-        .btn-surface { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-        .btn-surface:hover { color: var(--text); }
-        .btn-danger  { background: #3d1a1a; color: #e57373; border: 1px solid #5c2222; }
-        .btn-danger:hover  { background: #5c2222; }
+        .btn-surface { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-surface:hover { color: var(--accent); background: #f3d0e3; }
+        .btn-danger { background: #f8d0d0; color: #c62828; border: 1px solid #e8a0a0; }
+        .btn-danger:hover { background: #f0b0b0; color: #b71c1c; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
 
         /* Entry list */
         #entryList {
@@ -418,19 +385,15 @@
             transition: background .15s, opacity .2s;
         }
         .entry-row:hover { background: var(--surface3); }
-        .entry-row.disabled-entry {
-            opacity: .45;
-        }
+        .entry-row.disabled-entry { opacity: .45; }
         .entry-row.disabled-entry .entry-label-input {
             text-decoration: line-through;
             color: var(--muted);
         }
 
-        /* enable/disable checkbox */
         .entry-toggle {
             flex-shrink: 0;
-            width: 16px;
-            height: 16px;
+            width: 16px; height: 16px;
             accent-color: var(--accent);
             cursor: pointer;
         }
@@ -481,7 +444,6 @@
             outline: none;
             text-align: center;
         }
-        .weight-input:focus { border-color: var(--accent); }
 
         .entry-del {
             background: none;
@@ -499,7 +461,7 @@
 
         .entry-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        /* ── Results tab ─────────────────────────────────────────────────── */
+        /* ── Results tab ────────────────────────────────────────── */
         .results-header {
             display: flex;
             justify-content: space-between;
@@ -528,15 +490,18 @@
             padding: 8px 12px;
             animation: slideIn .2s ease;
         }
-        @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
-        .log-num  { font-size: .72rem; color: var(--muted); min-width: 22px; }
-        .log-swatch { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .log-num { font-size: .72rem; color: var(--muted); min-width: 22px; }
+        .log-swatch { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
         .log-label { flex: 1; font-size: .9rem; }
-        .log-time  { font-size: .72rem; color: var(--muted); }
+        .log-time { font-size: .72rem; color: var(--muted); }
 
         .empty-msg { color: var(--muted); font-size: .9rem; text-align: center; padding: 24px; }
 
-        /* ── Settings tab ─────────────────────────────────────────────────── */
+        /* ── Settings tab ───────────────────────────────────────── */
         .setting-group { margin-bottom: 20px; }
         .setting-group h3 {
             font-size: .78rem;
@@ -554,7 +519,6 @@
             margin-bottom: 10px;
         }
         .setting-row label { font-size: .88rem; }
-
         .setting-row input[type="number"],
         .setting-row select {
             width: 90px;
@@ -566,10 +530,7 @@
             font-size: .88rem;
             outline: none;
         }
-        .setting-row input[type="number"]:focus,
-        .setting-row select:focus { border-color: var(--accent); }
 
-        .toggle-wrap { display: flex; align-items: center; gap: 8px; }
         .toggle {
             position: relative;
             width: 40px; height: 22px;
@@ -596,10 +557,10 @@
         .toggle input:checked + .toggle-slider { background: var(--accent); }
         .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
 
-        /* =====================================================================
-           RESULT MODAL
-           ===================================================================== */
-        #modal {
+        /* =================================================================
+           MODALS (shared)
+           ================================================================= */
+        .modal-overlay {
             display: none;
             position: fixed; inset: 0;
             background: rgba(0,0,0,.6);
@@ -608,18 +569,7 @@
             align-items: center;
             justify-content: center;
         }
-        #modal.open { display: flex; }
-
-        #shareModal {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.6);
-            backdrop-filter: blur(5px);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-        }
-        #shareModal.open { display: flex; }
+        .modal-overlay.open { display: flex; }
 
         .modal-box {
             background: var(--surface);
@@ -637,13 +587,20 @@
         }
 
         .modal-confetti { font-size: 2.6rem; margin-bottom: 8px; }
-        .modal-eyebrow  { font-size: .78rem; color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
-        .modal-winner   { font-size: 2.1rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; word-break: break-word; }
-        .modal-swatch   { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-bottom: 20px; vertical-align: middle; }
-        .modal-actions  { display: flex; gap: 10px; }
+        .modal-eyebrow { font-size: .78rem; color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+        .modal-winner { font-size: 2.1rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; word-break: break-word; }
+        .modal-swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-bottom: 20px; vertical-align: middle; }
+        .modal-actions { display: flex; gap: 10px; }
         .modal-actions .btn { flex: 1; }
 
-        /* ── Share modal extras ──────────────────────────────────────────── */
+        /* ── Share modal extras ──────────────────────────────── */
+        .share-description {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
         .share-url-wrapper {
             display: flex;
             gap: 8px;
@@ -661,13 +618,13 @@
             min-width: 0;
             word-break: break-all;
         }
-        .share-url-input:focus { border-color: var(--accent); }
         .share-copied-msg {
             font-size: .78rem;
             color: var(--green);
             margin-top: 6px;
             min-height: 1.2em;
         }
+        .share-actions { margin-top: 12px; }
 
         @media (max-width: 640px) {
             .wheel-wrap { width: 300px; height: 300px; }
@@ -677,16 +634,15 @@
 </head>
 <body>
 
-<!-- Background image slideshow (behind everything) -->
+<!-- Background image slideshow -->
 <div class="background-container">
     <div class="background-image-wrapper">
         <div class="background-overlay"></div>
-        <!-- Images will be inserted here dynamically -->
     </div>
 </div>
 
 <header>
-    <span style="font-size:1.5rem"><img src="img/favicon.png" width="16" height="16"/></span>
+    <img src="img/favicon.png" width="16" height="16" alt="" />
     <h1>Cana's <em>Wheel</em></h1>
 </header>
 
@@ -699,9 +655,7 @@
         </div>
         <div class="spin-col">
             <button id="spinBtn" title="Spin (Ctrl+Enter)">
-                <img src="img/spin/spin-1.png" alt="Spin"
-                     onmouseenter="this.src='img/spin/spin-hover.png'"
-                     onmouseleave="this.src='img/spin/spin-1.png'" />
+                <img src="img/spin/spin-1.png" alt="Spin" />
             </button>
             <span class="spin-hint">Ctrl+↵</span>
         </div>
@@ -710,14 +664,12 @@
     <div class="panel">
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="entries">Entries</button>
-            <button class="tab-btn"        data-tab="results">Results</button>
-            <button class="tab-btn"        data-tab="settings">Settings</button>
+            <button class="tab-btn" data-tab="results">Results</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
-        <!-- ══ ENTRIES TAB ══════════════════════════════ -->
+        <!-- Entries Tab -->
         <div class="tab-pane active" id="tab-entries">
-
-            <!-- Entry Sets -->
             <div class="sets-section">
                 <div class="sets-section-header">
                     <h4>📂 Entry Sets</h4>
@@ -731,16 +683,13 @@
                 </div>
             </div>
 
-            <!-- Add-entry toolbar -->
             <div class="entries-toolbar">
                 <input id="newLabel" type="text" placeholder="Type an entry and press Enter…" maxlength="80" />
                 <button class="btn btn-accent" id="addBtn">+ Add</button>
             </div>
 
-            <!-- Entry list -->
             <ul id="entryList"></ul>
 
-            <!-- Bulk actions -->
             <div class="entry-actions">
                 <button class="btn btn-surface" id="shuffleBtn">🔀 Shuffle</button>
                 <button class="btn btn-surface" id="sortBtn">🔤 Sort A–Z</button>
@@ -750,7 +699,7 @@
             </div>
         </div>
 
-        <!-- ══ RESULTS TAB ══════════════════════════════ -->
+        <!-- Results Tab -->
         <div class="tab-pane" id="tab-results">
             <div class="results-header">
                 <h3>Win history</h3>
@@ -761,9 +710,8 @@
             </ul>
         </div>
 
-        <!-- ══ SETTINGS TAB ══════════════════════════════ -->
+        <!-- Settings Tab -->
         <div class="tab-pane" id="tab-settings">
-
             <div class="setting-group">
                 <h3>Spin behaviour</h3>
                 <div class="setting-row">
@@ -810,14 +758,13 @@
                     <input type="number" id="cfg-tick-vol" min="0" max="100" step="5" value="5" />
                 </div>
             </div>
-
         </div>
     </div>
 
 </div>
 
 <!-- Winner modal -->
-<div id="modal" role="dialog" aria-modal="true">
+<div id="modal" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-box">
         <div class="modal-confetti">🎉</div>
         <div class="modal-eyebrow">The wheel chose…</div>
@@ -831,44 +778,79 @@
 </div>
 
 <!-- Share modal -->
-<div id="shareModal" role="dialog" aria-modal="true">
+<div id="shareModal" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-box">
         <div class="modal-confetti">🔗</div>
         <div class="modal-eyebrow">Share this wheel</div>
-        <div class="modal-winner" style="font-size:1.1rem; color: var(--text);">Copy the link below to share your wheel options with others!</div>
+        <div class="share-description">Copy the link below to share your wheel options with others!</div>
         <div class="share-url-wrapper">
             <input type="text" class="share-url-input" id="shareUrlInput" readonly />
             <button class="btn btn-accent" id="copyShareBtn">📋 Copy</button>
         </div>
         <div class="share-copied-msg" id="shareCopiedMsg"></div>
-        <div class="modal-actions" style="margin-top: 12px;">
+        <div class="modal-actions share-actions">
             <button class="btn btn-surface" id="shareModalClose">Close</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ── SPIN BUTTON IMAGE PATHS ────────────────────────────────────────────────
+    /* ================================================================
+       CONSTANTS
+       ================================================================ */
     const SPIN_IMG_DEFAULT = 'img/spin/spin-1.png';
     const SPIN_IMG_HOVER   = 'img/spin/spin-hover.png';
     const SPIN_IMG_SMASH   = 'img/spin/spin-smash.gif';
-    // ── BUTTON CLICK SOUND ─────────────────────────────────────────────────────
-    const buttonClickSound = new Audio('sound/button.mp3');
+    const TWO_PI           = Math.PI * 2;
+    const HALF_PI_NEG      = -Math.PI / 2;
 
-    // ── PALETTE ────────────────────────────────────────────────────────────────
     const PALETTE = [
-        '#f2a0a0',  '#f2c4a0',  '#f5e0a0',  '#a8dbb8',
-        '#a0d4cb',  '#a8c8e8',  '#c9a8e0',  '#e8a0c8',
-        '#f2b0a0',  '#a0d8e0',  '#c4dba0',  '#f2c8a0',
+        '#f2a0a0', '#f2c4a0', '#f5e0a0', '#a8dbb8',
+        '#a0d4cb', '#a8c8e8', '#c9a8e0', '#e8a0c8',
+        '#f2b0a0', '#a0d8e0', '#c4dba0', '#f2c8a0',
     ];
 
-    // ── LOCALSTORAGE KEYS ──────────────────────────────────────────────────────
-    const LS_ENTRIES  = 'pickerWheel_entries';
-    const LS_SETS     = 'pickerWheel_sets';
-    const LS_CFG      = 'pickerWheel_cfg';
-    const LS_NEXT_ID  = 'pickerWheel_nextId';
+    const LS_ENTRIES = 'pickerWheel_entries';
+    const LS_SETS    = 'pickerWheel_sets';
+    const LS_CFG     = 'pickerWheel_cfg';
+    const LS_NEXT_ID = 'pickerWheel_nextId';
 
-    // ── STATE ──────────────────────────────────────────────────────────────────
+    // Preload spin images
+    [SPIN_IMG_HOVER, SPIN_IMG_SMASH].forEach(src => { new Image().src = src; });
+
+    const buttonClickSound = new Audio('sound/button.mp3');
+
+    /* ================================================================
+       UTILITIES
+       ================================================================ */
+    const $ = id => document.getElementById(id);
+    const $$ = sel => document.querySelectorAll(sel);
+
+    function debounce(fn, ms) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), ms);
+        };
+    }
+
+    function el(tag, attrs = {}, children = []) {
+        const node = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs)) {
+            if (k === 'className')      node.className = v;
+            else if (k === 'textContent') node.textContent = v;
+            else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+            else if (k === 'style' && typeof v === 'object')
+                Object.assign(node.style, v);
+            else node[k] = v;
+        }
+        for (const c of children) node.appendChild(c);
+        return node;
+    }
+
+    /* ================================================================
+       STATE
+       ================================================================ */
     let nextId = 1;
 
     function mkEntry(label, color, weight = 1, disabled = false) {
@@ -876,8 +858,8 @@
     }
 
     const state = {
-        entries: [],
-        rotation:     -Math.PI / 2,
+        entries:      [],
+        rotation:     HALF_PI_NEG,
         spinning:     false,
         logCount:     0,
         lastWinnerId: null,
@@ -891,21 +873,68 @@
         },
     };
 
-    // ── TICK SOUND (Web Audio API) ─────────────────────────────────────────────
-    let audioCtx    = null;
-    let tickBuffer  = null;
+    /* ── Entry cache ─────────────────────────────────────────────── */
+    let _cachedActive = null;
+    let _cachedSlices = null;
+    let _entriesDirty = true;
+
+    function invalidateEntryCache() {
+        _entriesDirty = true;
+        _cachedActive = null;
+        _cachedSlices = null;
+    }
+
+    function activeEntries() {
+        if (_entriesDirty || !_cachedActive) {
+            _cachedActive = state.entries.filter(e => !e.disabled);
+        }
+        return _cachedActive;
+    }
+
+    function buildSlices() {
+        if (!_entriesDirty && _cachedSlices) return _cachedSlices;
+
+        const active = activeEntries();
+        const tw = active.reduce((s, e) => s + e.weight, 0);
+        const slices = [];
+        let angle = HALF_PI_NEG;
+
+        for (const entry of active) {
+            const arc = (entry.weight / tw) * TWO_PI;
+            slices.push({ entry, startAngle: angle, endAngle: angle + arc, midAngle: angle + arc / 2 });
+            angle += arc;
+        }
+
+        _cachedSlices = slices;
+        _entriesDirty = false;
+        return slices;
+    }
+
+    /* ── Color helper ────────────────────────────────────────────── */
+    const _lightenCache = Object.create(null);
+
+    function lighten(hex) {
+        if (_lightenCache[hex]) return _lightenCache[hex];
+        const n = parseInt(hex.slice(1), 16);
+        const r = Math.min(255, ((n >> 16) & 0xff) + 60);
+        const g = Math.min(255, ((n >>  8) & 0xff) + 60);
+        const b = Math.min(255,  (n        & 0xff) + 60);
+        return (_lightenCache[hex] = `rgb(${r},${g},${b})`);
+    }
+
+    /* ================================================================
+       TICK SOUND (Web Audio API)
+       ================================================================ */
+    let audioCtx = null, tickBuffer = null;
 
     function ensureAudioCtx() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         return audioCtx;
     }
 
     function resumeAudio() {
         const ctx = ensureAudioCtx();
-        if (ctx.state === 'suspended') return ctx.resume();
-        return Promise.resolve();
+        return ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
     }
 
     function ensureTickBuffer() {
@@ -915,13 +944,11 @@
         const buf  = ctx.createBuffer(1, len, ctx.sampleRate);
         const data = buf.getChannelData(0);
         for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-        tickBuffer = buf;
-        return buf;
+        return (tickBuffer = buf);
     }
 
     function playTick() {
         if (!state.cfg.tickSound) return;
-
         const ctx = ensureAudioCtx();
         if (ctx.state !== 'running') return;
 
@@ -930,62 +957,61 @@
 
         const noise  = ctx.createBufferSource();
         noise.buffer = ensureTickBuffer();
-
-        const bp             = ctx.createBiquadFilter();
-        bp.type              = 'bandpass';
-        bp.frequency.value   = 5000;
-        bp.Q.value           = 0.6;
-
+        const bp           = ctx.createBiquadFilter();
+        bp.type            = 'bandpass';
+        bp.frequency.value = 5000;
+        bp.Q.value         = 0.6;
         const noiseGain = ctx.createGain();
         noiseGain.gain.setValueAtTime(vol * 0.8, now);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-
-        noise.connect(bp);
-        bp.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
+        noise.connect(bp).connect(noiseGain).connect(ctx.destination);
 
         const osc = ctx.createOscillator();
         osc.type  = 'sine';
         osc.frequency.setValueAtTime(200, now);
         osc.frequency.exponentialRampToValueAtTime(80, now + 0.025);
-
         const oscGain = ctx.createGain();
         oscGain.gain.setValueAtTime(vol * 0.5, now);
         oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(oscGain).connect(ctx.destination);
 
-        osc.connect(oscGain);
-        oscGain.connect(ctx.destination);
-
-        noise.start(now);
-        noise.stop(now + 0.045);
-        osc.start(now);
-        osc.stop(now + 0.04);
+        noise.start(now); noise.stop(now + 0.045);
+        osc.start(now);   osc.stop(now + 0.04);
     }
 
-    // ── PERSISTENCE ────────────────────────────────────────────────────────────
+    /* ================================================================
+       PERSISTENCE
+       ================================================================ */
+    function serializeEntries(entries) {
+        return entries.map(({ id, label, color, weight, disabled }) => ({ id, label, color, weight, disabled }));
+    }
+
+    function deserializeEntries(arr) {
+        return arr.map(e => ({
+            id:       e.id,
+            label:    e.label,
+            color:    e.color,
+            weight:   e.weight ?? 1,
+            disabled: e.disabled ?? false,
+        }));
+    }
 
     function saveEntries() {
-        const serialisable = state.entries.map(({ id, label, color, weight, disabled }) =>
-            ({ id, label, color, weight, disabled })
-        );
-        localStorage.setItem(LS_ENTRIES, JSON.stringify(serialisable));
+        localStorage.setItem(LS_ENTRIES, JSON.stringify(serializeEntries(state.entries)));
         localStorage.setItem(LS_NEXT_ID, String(nextId));
+        invalidateEntryCache();
     }
+
+    const debouncedSaveEntries = debounce(saveEntries, 300);
 
     function loadEntries() {
         try {
             const raw = localStorage.getItem(LS_ENTRIES);
             if (!raw) return false;
-            const arr = JSON.parse(raw);
             const savedNextId = parseInt(localStorage.getItem(LS_NEXT_ID) || '1', 10);
             nextId = savedNextId;
-            state.entries = arr.map(e => ({
-                id:       e.id,
-                label:    e.label,
-                color:    e.color,
-                weight:   e.weight ?? 1,
-                disabled: e.disabled ?? false,
-            }));
+            state.entries = deserializeEntries(JSON.parse(raw));
+            invalidateEntryCache();
             return true;
         } catch { return false; }
     }
@@ -997,54 +1023,40 @@
 
     function loadCfg() {
         try {
-            const raw = localStorage.getItem(LS_CFG);
-            if (!raw) return;
-            const c = JSON.parse(raw);
-            if (c.duration)   state.cfg.duration   = c.duration;
-            if (c.action)     state.cfg.action     = c.action;
+            const c = JSON.parse(localStorage.getItem(LS_CFG));
+            if (!c) return;
+            if (c.duration)  state.cfg.duration  = c.duration;
+            if (c.action)    state.cfg.action    = c.action;
+            if (c.wheelSize) state.cfg.wheelSize = c.wheelSize;
             if (typeof c.showLabels === 'boolean') state.cfg.showLabels = c.showLabels;
-            if (c.wheelSize)  state.cfg.wheelSize  = c.wheelSize;
-            if (typeof c.tickSound === 'boolean') state.cfg.tickSound = c.tickSound;
-            if (typeof c.tickVolume === 'number') state.cfg.tickVolume = c.tickVolume;
+            if (typeof c.tickSound  === 'boolean') state.cfg.tickSound  = c.tickSound;
+            if (typeof c.tickVolume === 'number')  state.cfg.tickVolume = c.tickVolume;
         } catch { /* ignore */ }
     }
 
-    // ── SETS PERSISTENCE ────────────────────────────────────────────────────────
-
+    /* ── Sets ─────────────────────────────────────────────────────── */
     function loadSetsMap() {
-        try {
-            const raw = localStorage.getItem(LS_SETS);
-            return raw ? JSON.parse(raw) : {};
-        } catch { return {}; }
+        try { return JSON.parse(localStorage.getItem(LS_SETS)) || {}; }
+        catch { return {}; }
     }
 
-    function saveSetsMap(map) {
-        localStorage.setItem(LS_SETS, JSON.stringify(map));
-    }
+    function saveSetsMap(map) { localStorage.setItem(LS_SETS, JSON.stringify(map)); }
 
     function saveSet(name) {
         if (!name.trim()) return;
         const map = loadSetsMap();
-        map[name.trim()] = state.entries.map(({ id, label, color, weight, disabled }) =>
-            ({ id, label, color, weight, disabled })
-        );
+        map[name.trim()] = serializeEntries(state.entries);
         saveSetsMap(map);
         renderSets();
     }
 
     function loadSet(name) {
-        const map = loadSetsMap();
-        const arr = map[name];
+        const arr = loadSetsMap()[name];
         if (!arr) return;
-        state.entries = arr.map(e => ({
-            id:       e.id,
-            label:    e.label,
-            color:    e.color,
-            weight:   e.weight ?? 1,
-            disabled: e.disabled ?? false,
-        }));
+        state.entries = deserializeEntries(arr);
         const maxId = state.entries.reduce((m, e) => Math.max(m, e.id), 0);
         if (maxId >= nextId) nextId = maxId + 1;
+        invalidateEntryCache();
         saveEntries();
         renderList();
         renderSets();
@@ -1057,46 +1069,74 @@
         renderSets();
     }
 
-    // ── DOM REFERENCES ─────────────────────────────────────────────────────────
-    const canvas      = document.getElementById('wheelCanvas');
+    /* ================================================================
+       DOM REFERENCES
+       ================================================================ */
+    const canvas      = $('wheelCanvas');
     const ctx         = canvas.getContext('2d');
-    const spinBtn     = document.getElementById('spinBtn');
+    const spinBtn     = $('spinBtn');
     const spinBtnImg  = spinBtn.querySelector('img');
-    const entryListEl = document.getElementById('entryList');
-    const resultLogEl = document.getElementById('resultLog');
-    const modalEl     = document.getElementById('modal');
-    const modalWinner = document.getElementById('modalWinner');
-    const modalSwatch = document.getElementById('modalSwatch');
-    const setsListEl  = document.getElementById('setsList');
-    const setsEmptyEl = document.getElementById('setsEmpty');
-    const setNameInput = document.getElementById('setNameInput');
+    const entryListEl = $('entryList');
+    const resultLogEl = $('resultLog');
+    const modalEl     = $('modal');
+    const modalWinner = $('modalWinner');
+    const modalSwatch = $('modalSwatch');
+    const setsListEl  = $('setsList');
+    const setsEmptyEl = $('setsEmpty');
+    const setNameInput = $('setNameInput');
+    const newLabelInput = $('newLabel');
+    const shareModalEl   = $('shareModal');
+    const shareUrlInput  = $('shareUrlInput');
+    const shareCopiedMsg = $('shareCopiedMsg');
 
-    // ── SPIN BUTTON IMAGE HELPERS ──────────────────────────────────────────────
+    /* ================================================================
+       SPIN BUTTON IMAGE HELPERS
+       ================================================================ */
     function setSpinBtnSmash() {
-        // Append a cache-buster so the GIF restarts from frame 1
         spinBtnImg.src = SPIN_IMG_SMASH + '?t=' + Date.now();
-        // Remove hover listeners while smashing / spinning
         spinBtnImg.onmouseenter = null;
         spinBtnImg.onmouseleave = null;
     }
 
     function resetSpinBtnImage() {
-        const isHovered = spinBtn.matches(':hover');
-        spinBtnImg.src = isHovered ? SPIN_IMG_HOVER : SPIN_IMG_DEFAULT;
-        // Restore hover listeners
+        spinBtnImg.src = spinBtn.matches(':hover') ? SPIN_IMG_HOVER : SPIN_IMG_DEFAULT;
         spinBtnImg.onmouseenter = () => { if (!state.spinning) spinBtnImg.src = SPIN_IMG_HOVER; };
         spinBtnImg.onmouseleave = () => { if (!state.spinning) spinBtnImg.src = SPIN_IMG_DEFAULT; };
     }
 
-    // Initialise hover listeners on load
     resetSpinBtnImage();
 
-    // ── CANVAS RESIZE ──────────────────────────────────────────────────────────
-    function canvasSize() { return canvas.width; }
-
+    /* ================================================================
+               UI LOCK DURING SPIN
+       ================================================================ */
+    function setUILocked(locked) {
+        // All .btn buttons in the panel
+        $$('.panel .btn').forEach(b => b.disabled = locked);
+        // Entry action buttons
+        $$('.entry-del').forEach(b => b.disabled = locked);
+        $$('.entry-toggle').forEach(b => b.disabled = locked);
+        $$('.entry-label-input').forEach(b => b.disabled = locked);
+        $$('.weight-input').forEach(b => b.disabled = locked);
+        $$('.swatch').forEach(b => b.style.pointerEvents = locked ? 'none' : '');
+        // Tab buttons
+        $$('.tab-btn').forEach(b => b.disabled = locked);
+        // Top-level inputs
+        newLabelInput.disabled = locked;
+        setNameInput.disabled = locked;
+        // Set chip interactions
+        $$('.set-chip-name').forEach(b => b.style.pointerEvents = locked ? 'none' : '');
+        $$('.set-chip-del').forEach(b => b.disabled = locked);
+        // Settings controls
+        $$('#tab-settings input, #tab-settings select').forEach(b => b.disabled = locked);
+        // Share button in the action row
+        $('shareBtn') && ($('shareBtn').disabled = locked);
+    }
+    /* ================================================================
+       CANVAS
+       ================================================================ */
     function applyWheelSize(size) {
-        const wrap = canvas.parentElement;
         const s = Math.max(100, Math.min(size, 800));
+        const wrap = canvas.parentElement;
         wrap.style.width  = s + 'px';
         wrap.style.height = s + 'px';
         canvas.width  = s;
@@ -1104,7 +1144,7 @@
         drawWheel();
     }
 
-    window.addEventListener('resize', () => {
+    const handleResize = debounce(() => {
         const wrap = canvas.parentElement;
         const maxSize = state.cfg.wheelSize ?? 440;
         const s = Math.min(wrap.parentElement.clientWidth, maxSize);
@@ -1115,36 +1155,13 @@
             canvas.height = s;
         }
         drawWheel();
-    });
+    }, 100);
 
-    // ── DRAW ───────────────────────────────────────────────────────────────────
-    function activeEntries() {
-        return state.entries.filter(e => !e.disabled);
-    }
+    window.addEventListener('resize', handleResize);
 
-    function totalWeight() {
-        return activeEntries().reduce((s, e) => s + e.weight, 0);
-    }
-
-    function buildSlices() {
-        const tw = totalWeight();
-        const slices = [];
-        let angle = -Math.PI / 2;
-        for (const entry of activeEntries()) {
-            const arc = (entry.weight / tw) * Math.PI * 2;
-            slices.push({
-                entry,
-                startAngle: angle,
-                endAngle:   angle + arc,
-                midAngle:   angle + arc / 2,
-            });
-            angle += arc;
-        }
-        return slices;
-    }
-
+    /* ── Drawing ──────────────────────────────────────────────────── */
     function drawWheel() {
-        const S  = canvasSize();
+        const S  = canvas.width;
         const cx = S / 2;
         const cy = S / 2;
         const r  = S / 2 - 5;
@@ -1156,105 +1173,113 @@
         if (active.length === 0) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.arc(cx, cy, r, 0, TWO_PI);
             ctx.fillStyle = '#0f3460';
             ctx.fill();
             ctx.fillStyle = '#8888aa';
             ctx.font = `bold ${S * 0.048}px Segoe UI, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            const msg = state.entries.length === 0
-                ? 'Add entries to spin!'
-                : 'All entries are disabled!';
-            ctx.fillText(msg, cx, cy);
+            ctx.fillText(state.entries.length === 0 ? 'Add entries to spin!' : 'All entries are disabled!', cx, cy);
             ctx.restore();
             return;
         }
 
-        const slices = buildSlices();
+        const slices     = buildSlices();
+        const showLabels = state.cfg.showLabels;
+        const flagAction = state.cfg.action === 'flag';
+        const lastWId    = state.lastWinnerId;
 
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(state.rotation);
         ctx.translate(-cx, -cy);
 
-        slices.forEach(({ entry, startAngle, endAngle, midAngle }) => {
-            const isWinner = entry.id === state.lastWinnerId && state.cfg.action === 'flag';
+        let fs, maxW;
+        if (showLabels) {
+            fs   = Math.max(9, Math.min(16, S * 0.034));
+            maxW = r * 0.68;
+        }
 
+        for (const { entry, startAngle, endAngle, midAngle } of slices) {
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.arc(cx, cy, r, startAngle, endAngle);
             ctx.closePath();
-
-            ctx.fillStyle = isWinner ? lighten(entry.color) : entry.color;
+            ctx.fillStyle = (flagAction && entry.id === lastWId) ? lighten(entry.color) : entry.color;
             ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, r, startAngle, endAngle);
-            ctx.closePath();
             ctx.strokeStyle = 'rgba(0,0,0,.1)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            if (state.cfg.showLabels) {
+            if (showLabels) {
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.rotate(midAngle);
-
-                const fs = Math.max(9, Math.min(16, S * 0.034));
                 ctx.font = `bold ${fs}px Segoe UI, sans-serif`;
-                ctx.fillStyle = '#fff';
-                ctx.textAlign = 'right';
+                ctx.fillStyle   = '#fff';
+                ctx.textAlign   = 'right';
                 ctx.textBaseline = 'middle';
                 ctx.shadowColor = 'rgba(0,0,0,.7)';
                 ctx.shadowBlur  = 4;
-
-                const maxW = r * 0.68;
                 ctx.fillText(clip(ctx, entry.label, maxW), r - 10, 0);
                 ctx.restore();
             }
-        });
+        }
 
         ctx.restore();
 
+// Center pin with heart
+        const pinR = S * 0.042;
         ctx.beginPath();
-        ctx.arc(cx, cy, S * 0.042, 0, Math.PI * 2);
-        ctx.fillStyle = '#1a1a2e';
+
+
+        // Draw a small heart on the pin
+        const hs = pinR * 0.6;
+        ctx.save();
+        ctx.translate(cx, cy + 3);
+        ctx.beginPath();
+        const topY = -hs * 0.6;
+        ctx.moveTo(0, hs * 0.7);
+        ctx.bezierCurveTo(-hs * 0.1, hs * 0.5, -hs, hs * 0.05, -hs, topY);
+        ctx.bezierCurveTo(-hs, topY - hs * 0.6, -hs * 0.5, topY - hs * 0.6, 0, topY - hs * 0.1);
+        ctx.bezierCurveTo(hs * 0.5, topY - hs * 0.6, hs, topY - hs * 0.6, hs, topY);
+        ctx.bezierCurveTo(hs, hs * 0.05, hs * 0.1, hs * 0.5, 0, hs * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = '#e71e62';
+        ctx.shadowColor = 'rgba(233, 30, 99, 0.6)';
+        ctx.shadowBlur = 2;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.restore();
     }
 
-    function lighten(hex) {
-        const n = parseInt(hex.slice(1), 16);
-        const r = Math.min(255, ((n >> 16) & 0xff) + 60);
-        const g = Math.min(255, ((n >>  8) & 0xff) + 60);
-        const b = Math.min(255,  (n        & 0xff) + 60);
-        return `rgb(${r},${g},${b})`;
-    }
-
-    function clip(ctx, text, maxWidth) {
-        if (ctx.measureText(text).width <= maxWidth) return text;
-        let t = text;
-        while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) t = t.slice(0, -1);
-        return t + '…';
+    function clip(canvasCtx, text, maxWidth) {
+        if (canvasCtx.measureText(text).width <= maxWidth) return text;
+        let lo = 0, hi = text.length - 1, best = 0;
+        while (lo <= hi) {
+            const mid = (lo + hi) >>> 1;
+            if (canvasCtx.measureText(text.slice(0, mid) + '…').width <= maxWidth) {
+                best = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        return text.slice(0, best) + '…';
     }
 
     function pointerSliceIndex(rotation) {
-        const active = activeEntries();
-        if (active.length === 0) return -1;
-
-        let local = (-Math.PI / 2 - rotation) % (Math.PI * 2);
-        if (local < 0) local += Math.PI * 2;
-
         const slices = buildSlices();
+        if (slices.length === 0) return -1;
+
+        let local = (HALF_PI_NEG - rotation) % TWO_PI;
+        if (local < 0) local += TWO_PI;
+
         for (let i = 0; i < slices.length; i++) {
-            let s = (slices[i].startAngle) % (Math.PI * 2);
-            if (s < 0) s += Math.PI * 2;
-            let e = (slices[i].endAngle) % (Math.PI * 2);
-            if (e < 0) e += Math.PI * 2;
+            let s = slices[i].startAngle % TWO_PI;
+            if (s < 0) s += TWO_PI;
+            let e = slices[i].endAngle % TWO_PI;
+            if (e < 0) e += TWO_PI;
 
             if (s <= e) {
                 if (local >= s && local < e) return i;
@@ -1265,22 +1290,24 @@
         return 0;
     }
 
-    // ── SPIN ───────────────────────────────────────────────────────────────────
+    /* ================================================================
+       SPIN
+       ================================================================ */
     async function spin() {
         const active = activeEntries();
         if (state.spinning || active.length === 0) return;
 
-        state.spinning    = true;
-        spinBtn.disabled  = true;
-
-        // Show smash animation immediately
+        state.spinning   = true;
+        spinBtn.disabled = true;
         setSpinBtnSmash();
+        setUILocked(true);
 
         if (state.cfg.tickSound) {
             ensureTickBuffer();
             await resumeAudio();
         }
 
+        // Pick winner by weighted random
         const tw = active.reduce((s, e) => s + e.weight, 0);
         let pick = Math.random() * tw;
         let winnerIdx = active.length - 1;
@@ -1289,30 +1316,32 @@
             if (pick <= 0) { winnerIdx = i; break; }
         }
         const winner = active[winnerIdx];
+        const winnerSlice = buildSlices()[winnerIdx];
 
-        const slices      = buildSlices();
-        const winnerSlice = slices[winnerIdx];
-
+        // Calculate target rotation — land near a border for maximum excitement
         const sliceArc = winnerSlice.endAngle - winnerSlice.startAngle;
-        const jitter   = (Math.random() - 0.5) * sliceArc * 0.6;
-        const targetBodyAngle = winnerSlice.midAngle + jitter;
-        const requiredRotation = -Math.PI / 2 - targetBodyAngle;
-        const delta = ((requiredRotation - state.rotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-        const extraSpins = (5 + Math.floor(Math.random() * 6)) * Math.PI * 2;
+        // Pick which border to land near: start or end of the slice
+        const nearStart = Math.random() < 0.5;
+        // Land within 5–15% of the slice arc from the chosen border (never ON the border)
+        const borderOffset = sliceArc * (0.01 + Math.random() * 0.08);
+        const targetBodyAngle = nearStart
+            ? winnerSlice.startAngle + borderOffset
+            : winnerSlice.endAngle   - borderOffset;
+        const requiredRotation = HALF_PI_NEG - targetBodyAngle;
+        const delta = ((requiredRotation - state.rotation) % TWO_PI + TWO_PI) % TWO_PI;
+        const extraSpins = (5 + Math.floor(Math.random() * 6)) * TWO_PI;
         const totalSpin  = delta + extraSpins;
 
-        const startRot  = state.rotation;
-        const endRot    = startRot + totalSpin;
-        const duration  = state.cfg.duration * 1000;
-
+        const startRot = state.rotation;
+        const endRot   = startRot + totalSpin;
+        const duration = state.cfg.duration * 1000;
         let lastSliceIdx = pointerSliceIndex(state.rotation);
 
-        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        const easeOut = t => 1 - Math.pow(1 - t, 3);
 
-        // Delay the wheel spin by 400ms to match the smash animation
-        await new Promise(resolve => setTimeout(resolve, 400));
+        // Delay to match smash animation
+        await new Promise(r => setTimeout(r, 400));
 
-        // Play button click sound
         buttonClickSound.currentTime = 0;
         buttonClickSound.play().catch(() => {});
 
@@ -1331,273 +1360,281 @@
 
             if (t < 1) {
                 requestAnimationFrame(frame);
-            } else {
-                state.rotation   = endRot;
-                state.spinning   = false;
-                spinBtn.disabled = false;
+                return;
+            }
 
-                // Revert spin button image back to default/hover
-                resetSpinBtnImage();
+            // Animation complete
+            state.rotation   = endRot;
+            state.spinning   = false;
+            spinBtn.disabled = false;
+            resetSpinBtnImage();
+            setUILocked(false);
 
-                state.lastWinnerId = winner.id;
+            state.lastWinnerId = winner.id;
+            drawWheel();
+            logResult(winner);
+            openModal(winner);
+
+            const { action } = state.cfg;
+            if (action === 'remove') {
+                const idx = state.entries.findIndex(e => e.id === winner.id);
+                if (idx !== -1) state.entries.splice(idx, 1);
+                state.lastWinnerId = null;
+            } else if (action === 'disable') {
+                winner.disabled = true;
+                state.lastWinnerId = null;
+            }
+
+            if (action === 'remove' || action === 'disable') {
+                invalidateEntryCache();
+                saveEntries();
+                renderList();
                 drawWheel();
-                logResult(winner);
-                openModal(winner);
-
-                if (state.cfg.action === 'remove') {
-                    const idx = state.entries.findIndex(e => e.id === winner.id);
-                    if (idx !== -1) state.entries.splice(idx, 1);
-                    state.lastWinnerId = null;
-                    saveEntries();
-                    renderList();
-                    drawWheel();
-                } else if (state.cfg.action === 'disable') {
-                    winner.disabled = true;
-                    state.lastWinnerId = null;
-                    saveEntries();
-                    renderList();
-                    drawWheel();
-                }
             }
         }
 
         requestAnimationFrame(frame);
     }
 
-    // ── ENTRY LIST ─────────────────────────────────────────────────────────────
+    /* ================================================================
+       ENTRY LIST RENDERING
+       ================================================================ */
     function renderList() {
-        entryListEl.replaceChildren();
+        invalidateEntryCache();
+        const frag = document.createDocumentFragment();
 
         if (state.entries.length === 0) {
-            const empty = document.createElement('li');
-            empty.className   = 'empty-msg';
-            empty.textContent = 'No entries yet.';
-            entryListEl.appendChild(empty);
+            frag.appendChild(el('li', { className: 'empty-msg', textContent: 'No entries yet.' }));
+            entryListEl.replaceChildren(frag);
             drawWheel();
             return;
         }
 
         for (const entry of state.entries) {
-            const li = document.createElement('li');
-            li.className  = 'entry-row' + (entry.disabled ? ' disabled-entry' : '');
+            const li = el('li', {
+                className: 'entry-row' + (entry.disabled ? ' disabled-entry' : ''),
+            });
             li.dataset.id = entry.id;
 
-            const toggleCb      = document.createElement('input');
-            toggleCb.type       = 'checkbox';
-            toggleCb.className  = 'entry-toggle';
-            toggleCb.checked    = !entry.disabled;
-            toggleCb.title      = entry.disabled ? 'Enable entry' : 'Disable entry';
-            toggleCb.addEventListener('change', () => {
-                entry.disabled = !toggleCb.checked;
-                li.classList.toggle('disabled-entry', entry.disabled);
-                saveEntries();
-                drawWheel();
+            const toggleCb = el('input', {
+                type: 'checkbox',
+                className: 'entry-toggle',
+                checked: !entry.disabled,
+                title: entry.disabled ? 'Enable entry' : 'Disable entry',
+                onchange() {
+                    entry.disabled = !toggleCb.checked;
+                    li.classList.toggle('disabled-entry', entry.disabled);
+                    invalidateEntryCache();
+                    saveEntries();
+                    drawWheel();
+                },
             });
 
-            const swatchWrap  = document.createElement('div');
-            swatchWrap.className = 'swatch-wrap';
-
-            const swatch = document.createElement('div');
-            swatch.className        = 'swatch';
-            swatch.style.background = entry.color;
-            swatch.title            = 'Change colour';
-
-            const colorInput  = document.createElement('input');
-            colorInput.type   = 'color';
-            colorInput.value  = entry.color;
-
-            swatch.addEventListener('click', () => colorInput.click());
+            const colorInput = el('input', { type: 'color', value: entry.color });
+            const swatch = el('div', {
+                className: 'swatch',
+                title: 'Change colour',
+                style: { background: entry.color },
+                onclick: () => colorInput.click(),
+            });
             colorInput.addEventListener('input', e => {
-                entry.color             = e.target.value;
+                entry.color = e.target.value;
                 swatch.style.background = entry.color;
-                saveEntries();
+                invalidateEntryCache();
+                debouncedSaveEntries();
                 drawWheel();
             });
+            const swatchWrap = el('div', { className: 'swatch-wrap' }, [swatch, colorInput]);
 
-            swatchWrap.appendChild(swatch);
-            swatchWrap.appendChild(colorInput);
-
-            const labelInput       = document.createElement('input');
-            labelInput.className   = 'entry-label-input';
-            labelInput.type        = 'text';
-            labelInput.value       = entry.label;
-            labelInput.title       = 'Click to edit';
-            labelInput.maxLength   = 80;
-            labelInput.addEventListener('input', e => {
-                entry.label = e.target.value;
-                saveEntries();
-                drawWheel();
+            const labelInput = el('input', {
+                type: 'text',
+                className: 'entry-label-input',
+                value: entry.label,
+                title: 'Click to edit',
+                maxLength: 80,
+                oninput: e => { entry.label = e.target.value; debouncedSaveEntries(); drawWheel(); },
             });
 
-            const weightWrap      = document.createElement('div');
-            weightWrap.className  = 'weight-wrap';
+            const weightInput = el('input', {
+                type: 'number',
+                className: 'weight-input',
+                value: entry.weight,
+                min: 1, max: 99,
+                onchange: e => {
+                    const v = parseInt(e.target.value, 10);
+                    entry.weight   = isNaN(v) || v < 1 ? 1 : Math.min(v, 99);
+                    e.target.value = entry.weight;
+                    invalidateEntryCache();
+                    saveEntries();
+                    drawWheel();
+                },
+            });
+            const weightWrap = el('div', { className: 'weight-wrap' }, [
+                el('label', { textContent: 'Wt' }),
+                weightInput,
+            ]);
 
-            const weightLabel         = document.createElement('label');
-            weightLabel.textContent   = 'Wt';
-
-            const weightInput     = document.createElement('input');
-            weightInput.className = 'weight-input';
-            weightInput.type      = 'number';
-            weightInput.value     = entry.weight;
-            weightInput.min       = 1;
-            weightInput.max       = 99;
-            weightInput.addEventListener('change', e => {
-                const v        = parseInt(e.target.value, 10);
-                entry.weight   = isNaN(v) || v < 1 ? 1 : Math.min(v, 99);
-                e.target.value = entry.weight;
-                saveEntries();
-                drawWheel();
+            const delBtn = el('button', {
+                className: 'entry-del',
+                title: 'Remove',
+                textContent: '✕',
+                onclick: () => {
+                    state.entries.splice(state.entries.indexOf(entry), 1);
+                    invalidateEntryCache();
+                    saveEntries();
+                    renderList();
+                },
             });
 
-            weightWrap.appendChild(weightLabel);
-            weightWrap.appendChild(weightInput);
-
-            const delBtn          = document.createElement('button');
-            delBtn.className      = 'entry-del';
-            delBtn.title          = 'Remove';
-            delBtn.textContent    = '✕';
-            delBtn.addEventListener('click', () => {
-                state.entries.splice(state.entries.indexOf(entry), 1);
-                saveEntries();
-                renderList();
-            });
-
-            li.appendChild(toggleCb);
-            li.appendChild(swatchWrap);
-            li.appendChild(labelInput);
-            li.appendChild(weightWrap);
-            li.appendChild(delBtn);
-            entryListEl.appendChild(li);
+            li.append(toggleCb, swatchWrap, labelInput, weightWrap, delBtn);
+            frag.appendChild(li);
         }
 
+        entryListEl.replaceChildren(frag);
         drawWheel();
     }
 
-    // ── SETS LIST ──────────────────────────────────────────────────────────────
+    /* ================================================================
+       SETS RENDERING
+       ================================================================ */
     function renderSets() {
-        setsListEl.replaceChildren();
-        const map = loadSetsMap();
-        const names = Object.keys(map);
+        const names = Object.keys(loadSetsMap());
 
         if (names.length === 0) {
-            setsListEl.appendChild(setsEmptyEl);
+            setsListEl.replaceChildren(setsEmptyEl);
             return;
         }
 
+        const frag = document.createDocumentFragment();
         for (const name of names) {
-            const chip = document.createElement('span');
-            chip.className = 'set-chip';
-
-            const nameSpan       = document.createElement('span');
-            nameSpan.className   = 'set-chip-name';
-            nameSpan.textContent = name;
-            nameSpan.title       = `Load "${name}"`;
-            nameSpan.addEventListener('click', () => {
-                if (!confirm(`Load set "${name}"? Current entries will be replaced.`)) return;
-                loadSet(name);
-            });
-
-            const delBtn       = document.createElement('button');
-            delBtn.className   = 'set-chip-del';
-            delBtn.title       = `Delete set "${name}"`;
-            delBtn.textContent = '✕';
-            delBtn.addEventListener('click', () => {
-                if (!confirm(`Delete set "${name}"?`)) return;
-                deleteSet(name);
-            });
-
-            chip.appendChild(nameSpan);
-            chip.appendChild(delBtn);
-            setsListEl.appendChild(chip);
+            frag.appendChild(el('span', { className: 'set-chip' }, [
+                el('span', {
+                    className: 'set-chip-name',
+                    textContent: name,
+                    title: `Load "${name}"`,
+                    onclick: () => { if (confirm(`Load set "${name}"? Current entries will be replaced.`)) loadSet(name); },
+                }),
+                el('button', {
+                    className: 'set-chip-del',
+                    title: `Delete set "${name}"`,
+                    textContent: '✕',
+                    onclick: () => { if (confirm(`Delete set "${name}"?`)) deleteSet(name); },
+                }),
+            ]));
         }
+        setsListEl.replaceChildren(frag);
     }
 
-    function nextColor() {
-        return PALETTE[state.entries.length % PALETTE.length];
-    }
+    /* ================================================================
+       HELPERS
+       ================================================================ */
+    function nextColor() { return PALETTE[state.entries.length % PALETTE.length]; }
 
     function addEntry(label) {
         label = label.trim();
         if (!label) return;
         state.entries.push(mkEntry(label, nextColor()));
+        invalidateEntryCache();
         saveEntries();
         renderList();
     }
 
-    // ── LOG ────────────────────────────────────────────────────────────────────
+    /* ── Log ──────────────────────────────────────────────────────── */
     function logResult(entry) {
         state.logCount++;
-        document.getElementById('logEmpty')?.remove();
+        $('logEmpty')?.remove();
 
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        const li = document.createElement('li');
-        li.className = 'log-item';
-
-        const numSpan         = document.createElement('span');
-        numSpan.className     = 'log-num';
-        numSpan.textContent   = `#${state.logCount}`;
-
-        const swatchSpan              = document.createElement('span');
-        swatchSpan.className          = 'log-swatch';
-        swatchSpan.style.background   = entry.color;
-
-        const labelSpan       = document.createElement('span');
-        labelSpan.className   = 'log-label';
-        labelSpan.textContent = entry.label;
-
-        const timeSpan        = document.createElement('span');
-        timeSpan.className    = 'log-time';
-        timeSpan.textContent  = time;
-
-        li.appendChild(numSpan);
-        li.appendChild(swatchSpan);
-        li.appendChild(labelSpan);
-        li.appendChild(timeSpan);
-
-        resultLogEl.insertBefore(li, resultLogEl.firstChild);
+        resultLogEl.insertBefore(
+            el('li', { className: 'log-item' }, [
+                el('span', { className: 'log-num',    textContent: `#${state.logCount}` }),
+                el('span', { className: 'log-swatch', style: { background: entry.color } }),
+                el('span', { className: 'log-label',  textContent: entry.label }),
+                el('span', { className: 'log-time',   textContent: time }),
+            ]),
+            resultLogEl.firstChild,
+        );
     }
 
     function resetLog() {
         state.logCount = 0;
-        resultLogEl.replaceChildren();
-        const empty       = document.createElement('li');
-        empty.className   = 'empty-msg';
-        empty.id          = 'logEmpty';
-        empty.textContent = 'No results yet — spin the wheel!';
-        resultLogEl.appendChild(empty);
+        resultLogEl.replaceChildren(
+            el('li', { className: 'empty-msg', id: 'logEmpty', textContent: 'No results yet — spin the wheel!' })
+        );
     }
 
-    // ── MODAL ──────────────────────────────────────────────────────────────────
+    /* ── Modals ───────────────────────────────────────────────────── */
     function openModal(entry) {
         modalWinner.textContent      = entry.label;
         modalSwatch.style.background = entry.color;
         modalEl.classList.add('open');
     }
 
-    function closeModal() {
-        modalEl.classList.remove('open');
+    function closeModal()      { modalEl.classList.remove('open'); }
+    function closeShareModal() { shareModalEl.classList.remove('open'); }
+
+    function openShareModal() {
+        if (state.entries.length === 0) { alert('No entries to share.'); return; }
+        shareUrlInput.value = generateShareUrl();
+        shareCopiedMsg.textContent = '';
+        shareModalEl.classList.add('open');
+        shareUrlInput.select();
     }
 
-    // ── TABS ───────────────────────────────────────────────────────────────────
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    /* ── Share ────────────────────────────────────────────────────── */
+    function generateShareUrl() {
+        const data = state.entries.map(({ label, color, weight, disabled }) => ({ label, color, weight, disabled }));
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash   = '';
+        url.searchParams.set('shared', encoded);
+        return url.toString();
+    }
+
+    function loadSharedEntries() {
+        try {
+            const encoded = new URLSearchParams(window.location.search).get('shared');
+            if (!encoded) return false;
+            const arr = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+            if (!Array.isArray(arr) || arr.length === 0) return false;
+            state.entries = arr.map(e => mkEntry(
+                e.label || 'Entry',
+                e.color || PALETTE[state.entries.length % PALETTE.length],
+                e.weight ?? 1,
+                e.disabled ?? false,
+            ));
+            invalidateEntryCache();
+            saveEntries();
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.search = '';
+            window.history.replaceState({}, '', cleanUrl.toString());
+            return true;
+        } catch { return false; }
+    }
+
+    /* ================================================================
+       TABS
+       ================================================================ */
+    $$('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            $$('.tab-btn').forEach(b  => b.classList.remove('active'));
+            $$('.tab-pane').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            $('tab-' + btn.dataset.tab).classList.add('active');
         });
     });
 
-    // ── EVENTS ─────────────────────────────────────────────────────────────────
-
+    /* ================================================================
+       EVENT LISTENERS
+       ================================================================ */
     spinBtn.addEventListener('click', spin);
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); spin(); }
     });
 
-    const newLabelInput = document.getElementById('newLabel');
-    document.getElementById('addBtn').addEventListener('click', () => {
+    $('addBtn').addEventListener('click', () => {
         addEntry(newLabelInput.value);
         newLabelInput.value = '';
         newLabelInput.focus();
@@ -1606,39 +1643,42 @@
         if (e.key === 'Enter') { addEntry(e.target.value); e.target.value = ''; }
     });
 
-    document.getElementById('shuffleBtn').addEventListener('click', () => {
+    $('shuffleBtn').addEventListener('click', () => {
         for (let i = state.entries.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [state.entries[i], state.entries[j]] = [state.entries[j], state.entries[i]];
         }
+        invalidateEntryCache();
         saveEntries();
         renderList();
     });
 
-    document.getElementById('sortBtn').addEventListener('click', () => {
+    $('sortBtn').addEventListener('click', () => {
         state.entries.sort((a, b) => a.label.localeCompare(b.label));
+        invalidateEntryCache();
         saveEntries();
         renderList();
     });
 
-    document.getElementById('enableAllBtn').addEventListener('click', () => {
+    $('enableAllBtn').addEventListener('click', () => {
         state.entries.forEach(e => e.disabled = false);
+        invalidateEntryCache();
         saveEntries();
         renderList();
     });
 
-    document.getElementById('clearBtn').addEventListener('click', () => {
-        if (!state.entries.length) return;
-        if (!confirm('Remove all entries?')) return;
+    $('clearBtn').addEventListener('click', () => {
+        if (!state.entries.length || !confirm('Remove all entries?')) return;
         state.entries = [];
+        invalidateEntryCache();
         saveEntries();
         renderList();
     });
 
-    document.getElementById('clearLogBtn').addEventListener('click', resetLog);
+    $('clearLogBtn').addEventListener('click', resetLog);
 
     // Sets
-    document.getElementById('saveSetBtn').addEventListener('click', () => {
+    $('saveSetBtn').addEventListener('click', () => {
         const name = setNameInput.value.trim();
         if (!name) { setNameInput.focus(); return; }
         if (state.entries.length === 0) { alert('No entries to save.'); return; }
@@ -1648,108 +1688,43 @@
         setNameInput.value = '';
     });
     setNameInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('saveSetBtn').click();
+        if (e.key === 'Enter') $('saveSetBtn').click();
     });
 
     // Settings
-    document.getElementById('cfg-duration').addEventListener('input', e => {
+    $('cfg-duration').addEventListener('input', e => {
         const v = parseFloat(e.target.value);
         if (v >= 1 && v <= 30) { state.cfg.duration = v; saveCfg(); }
     });
-    document.getElementById('cfg-action').addEventListener('change', e => {
+    $('cfg-action').addEventListener('change', e => {
         state.cfg.action = e.target.value;
         saveCfg();
     });
-    document.getElementById('cfg-labels').addEventListener('change', e => {
+    $('cfg-labels').addEventListener('change', e => {
         state.cfg.showLabels = e.target.checked;
         saveCfg();
         drawWheel();
     });
-    document.getElementById('cfg-wheelsize').addEventListener('change', e => {
+    $('cfg-wheelsize').addEventListener('change', e => {
         const v = parseInt(e.target.value, 10);
-        if (v >= 100 && v <= 800) {
-            state.cfg.wheelSize = v;
-            saveCfg();
-            applyWheelSize(v);
-        }
+        if (v >= 100 && v <= 800) { state.cfg.wheelSize = v; saveCfg(); applyWheelSize(v); }
     });
-    document.getElementById('cfg-tick').addEventListener('change', e => {
+    $('cfg-tick').addEventListener('change', e => {
         state.cfg.tickSound = e.target.checked;
         saveCfg();
     });
-    document.getElementById('cfg-tick-vol').addEventListener('input', e => {
+    $('cfg-tick-vol').addEventListener('input', e => {
         const v = parseInt(e.target.value, 10);
-        if (v >= 0 && v <= 100) {
-            state.cfg.tickVolume = v / 100;
-            saveCfg();
-        }
+        if (v >= 0 && v <= 100) { state.cfg.tickVolume = v / 100; saveCfg(); }
     });
 
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modalSpin').addEventListener('click', () => { closeModal(); spin(); });
+    // Modals
+    $('modalClose').addEventListener('click', closeModal);
+    $('modalSpin').addEventListener('click', () => { closeModal(); spin(); });
     modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
 
-    // ── SHARE FEATURE ──────────────────────────────────────────────────────────
-    const shareModalEl     = document.getElementById('shareModal');
-    const shareUrlInput    = document.getElementById('shareUrlInput');
-    const shareCopiedMsg   = document.getElementById('shareCopiedMsg');
-
-    function generateShareUrl() {
-        const data = state.entries.map(({ label, color, weight, disabled }) =>
-            ({ label, color, weight, disabled })
-        );
-        const json = JSON.stringify(data);
-        const encoded = btoa(unescape(encodeURIComponent(json)));
-        const url = new URL(window.location.href);
-        url.search = '';
-        url.hash = '';
-        url.searchParams.set('shared', encoded);
-        return url.toString();
-    }
-
-    function openShareModal() {
-        if (state.entries.length === 0) {
-            alert('No entries to share.');
-            return;
-        }
-        const url = generateShareUrl();
-        shareUrlInput.value = url;
-        shareCopiedMsg.textContent = '';
-        shareModalEl.classList.add('open');
-        shareUrlInput.select();
-    }
-
-    function closeShareModal() {
-        shareModalEl.classList.remove('open');
-    }
-
-    function loadSharedEntries() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const encoded = params.get('shared');
-            if (!encoded) return false;
-            const json = decodeURIComponent(escape(atob(encoded)));
-            const arr = JSON.parse(json);
-            if (!Array.isArray(arr) || arr.length === 0) return false;
-            state.entries = arr.map(e => mkEntry(
-                e.label || 'Entry',
-                e.color || PALETTE[state.entries.length % PALETTE.length],
-                e.weight ?? 1,
-                e.disabled ?? false
-            ));
-            saveEntries();
-            // Clean the URL so the share param doesn't persist on reload
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.search = '';
-            window.history.replaceState({}, '', cleanUrl.toString());
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    document.getElementById('shareBtn').addEventListener('click', openShareModal);
-    document.getElementById('copyShareBtn').addEventListener('click', () => {
+    $('shareBtn').addEventListener('click', openShareModal);
+    $('copyShareBtn').addEventListener('click', () => {
         shareUrlInput.select();
         navigator.clipboard.writeText(shareUrlInput.value).then(() => {
             shareCopiedMsg.textContent = '✅ Copied to clipboard!';
@@ -1758,153 +1733,114 @@
             shareCopiedMsg.textContent = '✅ Copied!';
         });
     });
-    document.getElementById('shareModalClose').addEventListener('click', closeShareModal);
+    $('shareModalClose').addEventListener('click', closeShareModal);
     shareModalEl.addEventListener('click', e => { if (e.target === shareModalEl) closeShareModal(); });
 
-    // ── BACKGROUND IMAGE SLIDESHOW ─────────────────────────────────────────────
-    const initializeProgressiveImageLoading = () => {
+    /* ================================================================
+       BACKGROUND IMAGE SLIDESHOW
+       ================================================================ */
+    (function initSlideshow() {
         const imageUrls = [
             'img/reel/1000008582.jpg',
             'img/reel/CanaKittyBackgroundWallpaper.png',
             'img/reel/Canaria_1.png',
-            'img/reel/skeb_by_qum.png'
+            'img/reel/skeb_by_qum.png',
         ];
 
         const wrapper = document.querySelector('.background-image-wrapper');
+        const images = [];
         let currentIndex = 0;
-        let images = [];
 
-        const loadImage = (url) => {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = url;
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-            });
-        };
-
-        const createBackgroundImage = (url) => {
-            const img = document.createElement('img');
-            img.className = 'background-image';
-            img.alt = 'VTuber Background';
-            img.src = url;
-            wrapper.appendChild(img);
-            return img;
-        };
-
-        const showImage = (imgElement) => {
-            images.forEach(img => {
-                img.classList.remove('active');
-            });
+        function showImage(imgElement) {
+            images.forEach(img => img.classList.remove('active'));
             imgElement.classList.add('active');
-        };
+        }
 
-        const loadImages = async () => {
+        (async () => {
             for (const url of imageUrls) {
                 try {
-                    await loadImage(url);
-                    const imgElement = createBackgroundImage(url);
-                    images.push(imgElement);
-
-                    if (images.length === 1) {
-                        showImage(imgElement);
-                    }
-                } catch (error) {
-                    console.error('Error loading image:', error);
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload  = resolve;
+                        img.onerror = reject;
+                        img.src = url;
+                    });
+                    const imgEl = el('img', { className: 'background-image', alt: 'VTuber Background', src: url });
+                    wrapper.appendChild(imgEl);
+                    images.push(imgEl);
+                    if (images.length === 1) showImage(imgEl);
+                } catch (err) {
+                    console.error('Error loading image:', err);
                 }
             }
-        };
-
-        loadImages();
+        })();
 
         setInterval(() => {
-            if (images.length > 1) {
+            if (images.length > 1 && !document.hidden) {
                 currentIndex = (currentIndex + 1) % images.length;
                 showImage(images[currentIndex]);
             }
         }, 8000);
-    };
+    })();
 
-    // ── BUTTERFLY SYSTEM ───────────────────────────────────────────────────────
-    const random = (min, max) => min + Math.random() * (max - min);
+    /* ================================================================
+       BUTTERFLY SYSTEM
+       ================================================================ */
+    (function initButterflies() {
+        const random = (min, max) => min + Math.random() * (max - min);
 
-    const createButterfly = () => {
-        const butterfly = document.createElement('div');
-        butterfly.className = 'butterfly';
-
-        const img = document.createElement('img');
-        img.src = 'img/butterfly-static.svg';
-
-        const size = random(15, 30);
-        butterfly.style.top = `${random(0, window.innerHeight * 0.8)}px`;
-        butterfly.style.width = `${size}px`;
-        butterfly.style.height = `${size * 1.5}px`;
-        butterfly.style.animationDuration = `${random(35, 60)}s`;
-
-        img.style.filter = `hue-rotate(${random(0, 360)}deg)`;
-
-        butterfly.appendChild(img);
-        document.body.appendChild(butterfly);
-
-        butterfly.addEventListener('animationend', () => butterfly.remove());
-        return butterfly;
-    };
-
-    const initializeButterflySystem = () => {
-        // Create initial butterflies
-        for (let i = 0; i < 3; i++) {
-            setTimeout(createButterfly, i * 2000);
+        function createButterfly() {
+            const size = random(15, 30);
+            const butterfly = el('div', {
+                className: 'butterfly',
+                style: {
+                    top:               `${random(0, window.innerHeight * 0.8)}px`,
+                    width:             `${size}px`,
+                    height:            `${size * 1.5}px`,
+                    animationDuration: `${random(35, 60)}s`,
+                },
+            }, [
+                el('img', { src: 'img/butterfly-static.svg', style: { filter: `hue-rotate(${random(0, 360)}deg)` } }),
+            ]);
+            document.body.appendChild(butterfly);
+            butterfly.addEventListener('animationend', () => butterfly.remove());
         }
 
-        // Continuously create butterflies
-        setInterval(() => {
-            if (Math.random() > 0.5) {
-                createButterfly();
-            }
-        }, 4000);
-    };
+        for (let i = 0; i < 3; i++) setTimeout(createButterfly, i * 2000);
 
-    // ── INIT ───────────────────────────────────────────────────────────────────
+        setInterval(() => {
+            if (!document.hidden && Math.random() > 0.5) createButterfly();
+        }, 4000);
+    })();
+
+    /* ================================================================
+       INIT
+       ================================================================ */
     loadCfg();
 
-    document.getElementById('cfg-duration').value   = state.cfg.duration;
-    document.getElementById('cfg-action').value     = state.cfg.action;
-    document.getElementById('cfg-labels').checked   = state.cfg.showLabels;
-    document.getElementById('cfg-wheelsize').value  = state.cfg.wheelSize;
-    document.getElementById('cfg-tick').checked     = state.cfg.tickSound;
-    document.getElementById('cfg-tick-vol').value   = Math.round(state.cfg.tickVolume * 100);
+    $('cfg-duration').value  = state.cfg.duration;
+    $('cfg-action').value    = state.cfg.action;
+    $('cfg-labels').checked  = state.cfg.showLabels;
+    $('cfg-wheelsize').value = state.cfg.wheelSize;
+    $('cfg-tick').checked    = state.cfg.tickSound;
+    $('cfg-tick-vol').value  = Math.round(state.cfg.tickVolume * 100);
 
-    // Check for shared entries in URL first, then fall back to localStorage
-    const sharedLoaded = loadSharedEntries();
-    if (!sharedLoaded) {
-        const restored = loadEntries();
-        if (!restored) {
+    if (!loadSharedEntries()) {
+        if (!loadEntries()) {
             state.entries = [
-                mkEntry('Piwi #1',  PALETTE[0]),
-                mkEntry('Piwi #2',  PALETTE[1]),
-                mkEntry('Piwi #3',  PALETTE[2]),
-                mkEntry('Piwi #4',  PALETTE[3]),
-                mkEntry('Piwi #5',  PALETTE[4]),
+                mkEntry('Piwi #1', PALETTE[0]),
+                mkEntry('Piwi #2', PALETTE[1]),
+                mkEntry('Piwi #3', PALETTE[2]),
+                mkEntry('Piwi #4', PALETTE[3]),
+                mkEntry('Piwi #5', PALETTE[4]),
             ];
+            invalidateEntryCache();
         }
     }
 
     renderSets();
     applyWheelSize(state.cfg.wheelSize);
     renderList();
-
-    // Start background & butterflies
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeProgressiveImageLoading();
-        initializeButterflySystem();
-    });
-
-    // If DOM is already loaded (script at end of body)
-    if (document.readyState !== 'loading') {
-        initializeProgressiveImageLoading();
-        initializeButterflySystem();
-    }
-
 </script>
 </body>
 </html>

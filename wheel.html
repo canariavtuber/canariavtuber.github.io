@@ -864,10 +864,10 @@
         logCount:     0,
         lastWinnerId: null,
         cfg: {
-            duration:   5,
+            duration:   8,
             action:     'none',
             showLabels: true,
-            wheelSize:  440,
+            wheelSize:  600,
             tickSound:  true,
             tickVolume: 0.1,
         },
@@ -1765,7 +1765,7 @@
                         img.onerror = reject;
                         img.src = url;
                     });
-                    const imgEl = el('img', { className: 'background-image', alt: 'VTuber Background', src: url });
+                    const imgEl = el('img', { className: 'background-image', alt: 'Cana', src: url });
                     wrapper.appendChild(imgEl);
                     images.push(imgEl);
                     if (images.length === 1) showImage(imgEl);
